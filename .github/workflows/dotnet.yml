@@ -13,11 +13,11 @@ jobs:
     steps:
     # Step 1: Checkout the repository
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # Stable version
 
     # Step 2: Set up .NET SDK
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3  # Stable version
       with:
         dotnet-version: 6.0
 
