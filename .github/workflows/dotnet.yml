@@ -25,6 +25,9 @@ jobs:
     - name: Build project
       run: dotnet build --no-restore
 
+    - name: Give execute permissions to selenium-manager
+      run: chmod +x /home/runner/work/gitnew/gitnew/RashmiProject/bin/Debug/net6.0/selenium-manager/linux/selenium-manager
+
     - name: Run tests with SpecFlow filter
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
