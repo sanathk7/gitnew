@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -14,6 +14,7 @@
     <PackageReference Include="Selenium.WebDriver" Version="4.28.0" />
     <PackageReference Include="SpecFlow.Plus.LivingDocPlugin" Version="3.9.57" />
     <PackageReference Include="SpecFlow.NUnit" Version="3.9.74" />
+    <PackageReference Include="SpecFlow.MsBuild" Version="3.9.74" /> <!-- Replaced deprecated package -->
     <PackageReference Include="nunit" Version="4.3.2" />
     <PackageReference Include="FluentAssertions" Version="8.0.1" />
     <PackageReference Include="WebDriverManager" Version="2.17.5" />
