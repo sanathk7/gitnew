@@ -1,0 +1,39 @@
+# This workflow will build a .NET project and run SpecFlow tests
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0 # Adjust the .NET version if needed
+
+    - name: Restore dependencies
+      run: dotnet restore RashmiProject.sln # Ensure the solution file is restored
+
+    - name: Build
+      run: dotnet build RashmiProject.sln --no-restore # Build the solution without restoring again
+
+    - name: Install SpecFlow tools locally
+      run: |
+        # Install SpecFlow tools in the "tools" directory
+        dotnet tool install SpecFlow.Tools.MsBuild.Generation --version 3.9.74 --tool-path ./tools
+
+    - name: Test (Run Happyflow.feature)
+      run: |
+        # Run only the "Happyflow.feature" file
+        dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
