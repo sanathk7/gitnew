@@ -1,4 +1,4 @@
-name: .NET
+name: .NET CI
 
 on:
   push:
@@ -11,52 +11,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2  # Ensure using v2 of checkout
+    # Step 1: Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
+    # Step 2: Set up .NET SDK
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0
 
+    # Step 3: Restore project dependencies
     - name: Restore dependencies
       run: dotnet restore
 
+    # Step 4: Build the project
     - name: Build project
       run: dotnet build --no-restore
 
-    - name: Give execute permissions to selenium-manager
-      run: chmod +x /home/runner/work/gitnew/gitnew/RashmiProject/bin/Debug/net6.0/selenium-manager/linux/selenium-manager
-
-    - name: Run tests with SpecFlow filter
+    # Step 5: Run Tests
+    - name: Run Tests
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Take a screenshot on failure
-    - name: Take screenshot if failed
-      if: failure()  # Only take screenshot on failure
+    # Step 6: Capture screenshots on failure
+    - name: Take screenshot on failure
+      if: failure()
       run: |
+        # Ensure the screenshot directory exists
         mkdir -p ${{ github.workspace }}/screenshots
         cp TestResults/Screenshots/* ${{ github.workspace }}/screenshots/
         echo "Screenshots are saved in ${{ github.workspace }}/screenshots"
 
-    # Upload screenshots as artifacts
-    - name: Upload Screenshots Artifact
-      if: failure()  # Only upload screenshots if the tests fail
-      uses: actions/upload-artifact@v2  # Use v2 explicitly
+    # Step 7: Upload Screenshots as artifacts (Only if failure occurs)
+    - name: Upload Screenshots as Artifact
+      if: failure()
+      uses: actions/upload-artifact@v2  # Explicitly use v2 for artifact upload
       with:
         name: screenshots
         path: ${{ github.workspace }}/screenshots/*
 
-    # Send email notification with screenshot if failure occurs
-    - name: Send email notification with screenshot
-      if: failure()  # Only send email on failure
+    # Step 8: Send email on failure with screenshots attached
+    - name: Send email notification on failure
+      if: failure()
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address
-        password: ${{ secrets.GMAIL_PASSWORD }}  # The Gmail App password
+        username: ${{ secrets.GMAIL_USERNAME }}
+        password: ${{ secrets.GMAIL_PASSWORD }}
         subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
@@ -65,6 +68,6 @@ jobs:
 
           Regards,
           GitHub Actions
-        to: ${{ secrets.DEVELOPER_EMAIL }}  # Developer's email
-        from: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address
+        to: ${{ secrets.DEVELOPER_EMAIL }}
+        from: ${{ secrets.GMAIL_USERNAME }}
         attachments: ${{ github.workspace }}/screenshots/*
