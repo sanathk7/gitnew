@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0
 
@@ -50,7 +50,13 @@ jobs:
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
         subject: "Test Failed - Screenshot Attached"
-        body: "Hello Developer, \n\nOne or more tests have failed. Please find the screenshot attached for your reference."
+        body: |
+          Hello Developer,
+
+          One or more tests have failed. Please find the screenshot attached for your reference.
+
+          Regards,
+          Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: TestResults/Screenshots/*
