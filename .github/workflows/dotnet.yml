@@ -35,7 +35,7 @@ jobs:
     # Upload screenshots as artifacts (even if tests fail)
     - name: Upload screenshots
       if: always()  # Ensure this runs even if tests fail
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: screenshots
         path: TestResults/Screenshots/  # Path where screenshots are saved
