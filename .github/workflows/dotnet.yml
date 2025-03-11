@@ -1,4 +1,4 @@
-name: .NET CI
+name: .NET
 
 on:
   push:
@@ -11,47 +11,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository
-    - name: Checkout Repository
-      uses: actions/checkout@v2  # Stable version
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-    # Step 2: Set up .NET SDK
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3  # Stable version
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0
 
-    # Step 3: Restore project dependencies
     - name: Restore dependencies
       run: dotnet restore
 
-    # Step 4: Build the project
     - name: Build project
       run: dotnet build --no-restore
 
-    # Step 5: Run Tests
-    - name: Run Tests
-      run: dotnet test RashmiProject.sln --no-build --verbosity normal
+    - name: Give execute permissions to selenium-manager
+      run: chmod +x /home/runner/work/gitnew/gitnew/RashmiProject/bin/Debug/net6.0/selenium-manager/linux/selenium-manager
 
-    # Step 6: Capture screenshots on failure
-    - name: Take screenshot on failure
-      if: failure()
+    - name: Run tests with SpecFlow filter
       run: |
-        mkdir -p ${{ github.workspace }}/screenshots
-        cp TestResults/Screenshots/* ${{ github.workspace }}/screenshots/
-        echo "Screenshots are saved in ${{ github.workspace }}/screenshots"
+        dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Step 7: Upload Screenshots as artifacts (Only if failure occurs)
-    - name: Upload Screenshots as Artifact
-      if: failure()
-      uses: actions/upload-artifact@v2
-      with:
-        name: screenshots
-        path: ${{ github.workspace }}/screenshots/*
+    # Step to ensure the Screenshots directory exists and move screenshots to the right path
+    - name: Prepare Screenshots Directory
+      if: failure()  # Only run this if tests fail
+      run: |
+        # Ensure the screenshots directory exists
+        mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+        # Move the screenshots to the right directory
+        cp TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
 
-    # Step 8: Send email notification on failure with screenshots attached
-    - name: Send email notification on failure
-      if: failure()
+    # Send email notification with screenshot attached (via Gmail SMTP)
+    - name: Send email notification
+      if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.gmail.com
@@ -65,7 +57,7 @@ jobs:
           One or more tests have failed. Please find the screenshot attached for your reference.
 
           Regards,
-          GitHub Actions
+          Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: ${{ github.workspace }}/screenshots/*
+        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
