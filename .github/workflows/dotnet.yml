@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Use v2 to avoid potential issues with v3
+      uses: actions/checkout@v2
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4  # Use v4 to ensure stability
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0
 
@@ -32,19 +32,18 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debug the issue with the artifact upload action
-    - name: Debug Action Versions
+    # Debug the issue with the screenshot path
+    - name: Debug screenshot path
       run: |
-        echo "Checking the version of actions/upload-artifact"
-        curl -s https://api.github.com/repos/actions/upload-artifact/releases/latest
+        echo "Screenshot path: ${{ github.workspace }}/TestResults/Screenshots/"
 
-    # Upload the screenshots directory as an artifact
+    # Upload screenshots as artifacts if tests fail
     - name: Upload Screenshots Artifact
-      if: failure()  # Only upload the screenshots if the tests fail
-      uses: actions/upload-artifact@v3  # Use v3 to ensure we have the latest stable version
+      if: failure()  # Only upload if the tests fail
+      uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: TestResults/Screenshots/
+        path: TestResults/Screenshots/*
 
     # Send email notification with screenshot
     - name: Send email notification with screenshot
@@ -53,8 +52,8 @@ jobs:
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address (e.g., your-email@gmail.com)
-        password: ${{ secrets.GMAIL_PASSWORD }}  # The App Password you generated
+        username: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address
+        password: ${{ secrets.GMAIL_PASSWORD }}  # The App Password
         subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
