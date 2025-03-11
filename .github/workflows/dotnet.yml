@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +19,13 @@ jobs:
         dotnet-version: 6.0
 
     - name: Restore dependencies
-      run: dotnet restore RashmiProject.sln # Restore solution
+      run: dotnet restore RashmiProject.sln
 
     - name: Build
-      run: dotnet build RashmiProject.sln --no-restore # Build the solution
+      run: dotnet build RashmiProject.sln --no-restore
+
+    - name: Set executable permissions for selenium-manager
+      run: chmod +x /home/runner/work/gitnew/gitnew/RashmiProject/bin/Debug/net6.0/selenium-manager/linux/selenium-manager
 
     - name: Test (Run Happyflow.feature)
-      run: |
-        dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
+      run: dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
