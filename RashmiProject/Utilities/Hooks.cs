@@ -297,8 +297,15 @@ namespace RashmiProject.Utilities
 
                 Console.WriteLine($"Screenshot saved to: {screenshotFilePath}");
 
-                // Store the file path for sending the email later (through GitHub Action)
-                ScenarioContext.Current["ScreenshotPath"] = screenshotFilePath;
+                // Check if the screenshot was captured correctly
+                if (File.Exists(screenshotFilePath))
+                {
+                    Console.WriteLine($"Screenshot file found: {screenshotFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine("Screenshot file not found.");
+                }
             }
             catch (Exception ex)
             {
