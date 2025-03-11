@@ -1,4 +1,4 @@
-name: .NET Build and Test
+name: .NET
 
 on:
   push:
@@ -11,33 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
-      - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      # Set up .NET SDK
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 6.0
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0
 
-      # Cache NuGet dependencies
-      - name: Cache NuGet packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+    - name: Restore dependencies
+      run: dotnet restore
 
-      # Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore RashmiProject.sln
+    - name: Build project
+      run: dotnet build --no-restore
 
-      # Build the project
-      - name: Build
-        run: dotnet build RashmiProject.sln --no-restore --configuration Release
-
-      # Run tests for the specific feature
-      - name: Run SpecFlow tests for Happyflow.feature
-        run: |
-          dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
+    - name: Run tests with SpecFlow filter
+      run: |
+        dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity detailed --logger "trx;LogFileName=test_results.trx"
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: test_results.trx
