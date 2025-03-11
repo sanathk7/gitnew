@@ -50,17 +50,21 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "ExtentReports": {
+              "target": "Package",
+              "version": "[5.0.4, )"
+            },
             "FluentAssertions": {
               "target": "Package",
-              "version": "[6.2.0, )"
+              "version": "[8.0.1, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
-              "version": "[17.0.0, )"
+              "version": "[17.13.0, )"
             },
             "NUnit3TestAdapter": {
               "target": "Package",
-              "version": "[4.1.0, )"
+              "version": "[5.0.0, )"
             },
             "Selenium.Support": {
               "target": "Package",
@@ -78,17 +82,13 @@
               "target": "Package",
               "version": "[3.9.57, )"
             },
-            "SpecFlow.Tools.MsBuild.Generation": {
-              "target": "Package",
-              "version": "[3.9.74, )"
-            },
             "WebDriverManager": {
               "target": "Package",
               "version": "[2.17.5, )"
             },
             "nunit": {
               "target": "Package",
-              "version": "[3.13.2, )"
+              "version": "[4.3.2, )"
             }
           },
           "imports": [
