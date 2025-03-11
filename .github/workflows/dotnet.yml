@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3  # Updated to v3
+      uses: actions/checkout@v2  # Use v2 to avoid potential issues with v3
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v5  # Updated to v5
+      uses: actions/setup-dotnet@v4  # Use v4 to ensure stability
       with:
         dotnet-version: 6.0
 
@@ -35,7 +35,7 @@ jobs:
     # Upload the screenshots directory as an artifact
     - name: Upload Screenshots Artifact
       if: failure()  # Only upload the screenshots if the tests fail
-      uses: actions/upload-artifact@v3  # Ensure this is v3
+      uses: actions/upload-artifact@v2  # Use v2 for artifact upload
       with:
         name: screenshots
         path: TestResults/Screenshots/
