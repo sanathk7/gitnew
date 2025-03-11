@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Updated to v3
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5  # Updated to v5
       with:
         dotnet-version: 6.0
 
@@ -35,12 +35,12 @@ jobs:
     # Upload the screenshots directory as an artifact
     - name: Upload Screenshots Artifact
       if: failure()  # Only upload the screenshots if the tests fail
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3  # Ensure this is v3
       with:
         name: screenshots
         path: TestResults/Screenshots/
 
-    # Send email notification with screenshots attached
+    # Send email notification with screenshot
     - name: Send email notification with screenshot
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
