@@ -40,7 +40,7 @@ jobs:
     # Upload screenshots as artifacts if tests fail
     - name: Upload Screenshots Artifact
       if: failure()  # Only upload if the tests fail
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2  # Updated to v2
       with:
         name: screenshots
         path: TestResults/Screenshots/*
