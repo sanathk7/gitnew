@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Consider using v2 for better stability
+      uses: actions/checkout@v2  # Using v2 for stability
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v3  # Use v3, it's stable and widely used
@@ -35,7 +35,7 @@ jobs:
     # Upload screenshots as artifacts (even if tests fail)
     - name: Upload screenshots
       if: always()  # Ensure this runs even if tests fail
-      uses: actions/upload-artifact@v3  # Use v3 here
+      uses: actions/upload-artifact@v2  # Switching to v2 for artifact uploading
       with:
         name: screenshots
         path: TestResults/Screenshots/  # Path where screenshots are saved
