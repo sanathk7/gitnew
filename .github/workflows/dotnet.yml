@@ -32,32 +32,23 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Manually upload screenshots via GitHub API
-    - name: Upload screenshots via GitHub API
-      if: always()  # Ensure this runs even if tests fail
-      run: |
-        ARTIFACT_NAME="screenshots"
-        ARTIFACT_PATH="TestResults/Screenshots/"
-        ARTIFACT_API_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts"
+    # Upload the screenshots directory as an artifact
+    - name: Upload Screenshots Artifact
+      if: failure()  # Only upload the screenshots if the tests fail
+      uses: actions/upload-artifact@v3
+      with:
+        name: screenshots
+        path: TestResults/Screenshots/
 
-        # Create artifact JSON data for upload
-        echo "{\"name\": \"$ARTIFACT_NAME\", \"path\": \"$ARTIFACT_PATH\"}" > artifact_data.json
-
-        # Upload artifact via GitHub API
-        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          -d @artifact_data.json \
-          "$ARTIFACT_API_URL"
-
-    # Send email notification with screenshot attached (via Gmail SMTP)
-    - name: Send email notification
+    # Send email notification with screenshots attached
+    - name: Send email notification with screenshot
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.GMAIL_USERNAME }}
-        password: ${{ secrets.GMAIL_PASSWORD }}
+        username: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address (e.g., your-email@gmail.com)
+        password: ${{ secrets.GMAIL_PASSWORD }}  # The App Password you generated
         subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
@@ -68,4 +59,4 @@ jobs:
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: TestResults/Screenshots/*
+        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
