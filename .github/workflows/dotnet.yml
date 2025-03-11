@@ -38,7 +38,6 @@ jobs:
     - name: Take screenshot on failure
       if: failure()
       run: |
-        # Ensure the screenshot directory exists
         mkdir -p ${{ github.workspace }}/screenshots
         cp TestResults/Screenshots/* ${{ github.workspace }}/screenshots/
         echo "Screenshots are saved in ${{ github.workspace }}/screenshots"
@@ -46,12 +45,12 @@ jobs:
     # Step 7: Upload Screenshots as artifacts (Only if failure occurs)
     - name: Upload Screenshots as Artifact
       if: failure()
-      uses: actions/upload-artifact@v2  # Explicitly use v2 for artifact upload
+      uses: actions/upload-artifact@v2
       with:
         name: screenshots
         path: ${{ github.workspace }}/screenshots/*
 
-    # Step 8: Send email on failure with screenshots attached
+    # Step 8: Send email notification on failure with screenshots attached
     - name: Send email notification on failure
       if: failure()
       uses: dawidd6/action-send-mail@v3
