@@ -32,7 +32,13 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Check if the screenshots directory exists and list it for debugging
+    # List contents of workspace (for debugging)
+    - name: List workspace contents
+      run: |
+        echo "Listing workspace directory contents:"
+        ls -R .  # List all files and directories recursively
+
+    # List contents of Screenshots directory (for debugging)
     - name: List Screenshots directory content
       run: |
         echo "Listing contents of Screenshots directory:"
@@ -44,7 +50,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: screenshots
-        path: TestResults/Screenshots/*
+        path: TestResults/Screenshots/*  # Make sure this path is correct
 
     # Send email notification with screenshot attached (via Gmail SMTP)
     - name: Send email notification
