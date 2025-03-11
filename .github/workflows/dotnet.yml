@@ -36,10 +36,13 @@ jobs:
     - name: Prepare Screenshots Directory
       if: failure()  # Only run this if tests fail
       run: |
-        # Ensure the screenshots directory exists
-        mkdir -p ${{ github.workspace }}/TestResults/Screenshots
-        # Move the screenshots to the right directory
-        cp TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+        # Check if the screenshots directory exists and move any screenshots if present
+        if [ -d "TestResults/Screenshots" ]; then
+          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+          cp TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+        else
+          echo "No screenshots found. Skipping copy operation."
+        fi
 
     # Send email notification with screenshot attached (via Gmail SMTP)
     - name: Send email notification
