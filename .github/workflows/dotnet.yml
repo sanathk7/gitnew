@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Using v2 for stability
+      uses: actions/checkout@v2
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3  # Use v3, it's stable and widely used
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0
 
@@ -32,13 +32,22 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Upload screenshots as artifacts (even if tests fail)
-    - name: Upload screenshots
+    # Manually upload screenshots via GitHub API
+    - name: Upload screenshots via GitHub API
       if: always()  # Ensure this runs even if tests fail
-      uses: actions/upload-artifact@v2  # Switching to v2 for artifact uploading
-      with:
-        name: screenshots
-        path: TestResults/Screenshots/  # Path where screenshots are saved
+      run: |
+        ARTIFACT_NAME="screenshots"
+        ARTIFACT_PATH="TestResults/Screenshots/"
+        ARTIFACT_API_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts"
+
+        # Create artifact JSON data for upload
+        echo "{\"name\": \"$ARTIFACT_NAME\", \"path\": \"$ARTIFACT_PATH\"}" > artifact_data.json
+
+        # Upload artifact via GitHub API
+        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d @artifact_data.json \
+          "$ARTIFACT_API_URL"
 
     # Send email notification with screenshot attached (via Gmail SMTP)
     - name: Send email notification
