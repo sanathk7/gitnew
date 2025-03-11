@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # Ensure using v2 of checkout
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
@@ -32,28 +32,31 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debug the issue with the screenshot path
-    - name: Debug screenshot path
+    # Take a screenshot on failure
+    - name: Take screenshot if failed
+      if: failure()  # Only take screenshot on failure
       run: |
-        echo "Screenshot path: ${{ github.workspace }}/TestResults/Screenshots/"
+        mkdir -p ${{ github.workspace }}/screenshots
+        cp TestResults/Screenshots/* ${{ github.workspace }}/screenshots/
+        echo "Screenshots are saved in ${{ github.workspace }}/screenshots"
 
-    # Upload screenshots as artifacts if tests fail
+    # Upload screenshots as artifacts
     - name: Upload Screenshots Artifact
-      if: failure()  # Only upload if the tests fail
-      uses: actions/upload-artifact@v3  # Use v3 or commit SHA if v2 fails
+      if: failure()  # Only upload screenshots if the tests fail
+      uses: actions/upload-artifact@v2  # Use v2 explicitly
       with:
         name: screenshots
-        path: TestResults/Screenshots/*
+        path: ${{ github.workspace }}/screenshots/*
 
-    # Send email notification with screenshot
+    # Send email notification with screenshot if failure occurs
     - name: Send email notification with screenshot
-      if: failure()  # Only send email if the test fails
+      if: failure()  # Only send email on failure
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.gmail.com
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address
-        password: ${{ secrets.GMAIL_PASSWORD }}  # The App Password
+        password: ${{ secrets.GMAIL_PASSWORD }}  # The Gmail App password
         subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
@@ -61,7 +64,7 @@ jobs:
           One or more tests have failed. Please find the screenshot attached for your reference.
 
           Regards,
-          Your GitHub Actions
-        to: ${{ secrets.DEVELOPER_EMAIL }}
-        from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
+          GitHub Actions
+        to: ${{ secrets.DEVELOPER_EMAIL }}  # Developer's email
+        from: ${{ secrets.GMAIL_USERNAME }}  # Your Gmail address
+        attachments: ${{ github.workspace }}/screenshots/*
