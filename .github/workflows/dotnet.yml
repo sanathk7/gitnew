@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2  # Use stable v2 instead of v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3  # Use stable v3 instead of v4
       with:
         dotnet-version: 6.0
 
@@ -31,7 +31,7 @@ jobs:
       run: dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal --logger "xunit"
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3  # Use stable v3
       with:
         name: test-results
         path: /home/runner/work/gitnew/gitnew/RashmiProject/test-results.xml
