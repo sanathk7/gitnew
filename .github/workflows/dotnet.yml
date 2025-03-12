@@ -43,10 +43,10 @@ jobs:
       if: failure()  # Only run this if tests fail
       run: |
         echo "Checking for Screenshots directory"
-        if [ -d "${GITHUB_WORKSPACE}/RashmiProject/TestResults/Screenshots" ]; then
+        if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
           echo "Screenshots directory found. Copying screenshots..."
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
-          cp -r "${GITHUB_WORKSPACE}/RashmiProject/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
+          cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
         else
           echo "No screenshots found. Skipping copy operation."
         fi
