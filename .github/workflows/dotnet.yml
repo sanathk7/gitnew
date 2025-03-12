@@ -32,37 +32,22 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debug step to check the directory and files after tests have run
-    - name: Check directories after test run
-      run: |
-        echo "Listing files in the workspace:"
-        ls -R $GITHUB_WORKSPACE
-        echo "Checking the TestResults/Screenshots directory contents:"
-        ls -R $GITHUB_WORKSPACE/TestResults/Screenshots || echo "No Screenshots directory found"
-
-    # Step to ensure the Screenshots directory exists and move screenshots to the right path
-    - name: Prepare Screenshots Directory
+    # Step to ensure the Screenshots and Reports directories exist
+    - name: Prepare Screenshots and Reports Directory
       if: failure()  # Only run this if tests fail
       run: |
-        echo "Checking for Screenshots directory in TestResults"
-        if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
-          echo "Screenshots directory found. Copying screenshots..."
-          # List files to debug if screenshots are actually saved
-          ls -R "${GITHUB_WORKSPACE}/TestResults/Screenshots"
-          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"  # Create the directory if it doesn't exist
-          cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/"* "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
-        else
-          echo "No screenshots found in TestResults/Screenshots. Skipping copy operation."
-        fi
+        # Ensure the Screenshots directory exists
+        mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+        mkdir -p ${{ github.workspace }}/TestResults/Reports
 
-    # Ensure write permissions for directories
-    - name: Ensure write permissions for TestResults
-      run: |
-        chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
-        ls -l ${GITHUB_WORKSPACE}/TestResults  # List files to check permissions
+        # Copy the screenshots to the workspace
+        cp -r ${{ github.workspace }}/RashmiProject/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
 
-    # Send email notification with screenshot attached
-    - name: Send email notification with screenshot
+        # Copy the ExtentReport to the workspace
+        cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
+
+    # Send email notification with screenshot and report attached (via Gmail SMTP)
+    - name: Send email notification
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
@@ -70,13 +55,14 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot Attached"
+        subject: "Test Failed - Screenshot and Report Attached"
         body: |
           Hello Developer,
-          One or more tests have failed. Please find the screenshot attached for your reference.
+          One or more tests have failed. Please find the screenshot(s) and the Extent report attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
-          ${GITHUB_WORKSPACE}/TestResults/Screenshots/*
+          ${{ github.workspace }}/TestResults/Screenshots/*
+          ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
