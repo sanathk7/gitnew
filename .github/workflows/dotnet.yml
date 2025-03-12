@@ -32,25 +32,17 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # List contents of workspace (for debugging)
-    - name: List workspace contents
+    # Step to ensure the Screenshots directory exists and move screenshots to the right path
+    - name: Prepare Screenshots Directory
+      if: failure()  # Only run this if tests fail
       run: |
-        echo "Listing workspace directory contents:"
-        ls -R .  # List all files and directories recursively
-
-    # List contents of Screenshots directory (for debugging)
-    - name: List Screenshots directory content
-      run: |
-        echo "Listing contents of Screenshots directory:"
-        ls -R TestResults/Screenshots/
-
-    # Upload screenshots directory as artifact if there are screenshots
-    - name: Upload screenshots as artifacts
-      if: always()  # Run even if tests pass or fail
-      uses: actions/upload-artifact@v3
-      with:
-        name: screenshots
-        path: TestResults/Screenshots/*  # Ensure the screenshots directory and files exist
+        # Check if the screenshots directory exists and move any screenshots if present
+        if [ -d "TestResults/Screenshots" ]; then
+          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+          cp -r TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+        else
+          echo "No screenshots found. Skipping copy operation."
+        fi
 
     # Send email notification with screenshot attached (via Gmail SMTP)
     - name: Send email notification
@@ -71,4 +63,4 @@ jobs:
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: TestResults/Screenshots/*  # Ensure the path is correct for screenshots
+        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
