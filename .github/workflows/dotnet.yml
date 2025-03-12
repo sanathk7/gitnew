@@ -32,6 +32,12 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
+    # Debug step to check directories
+    - name: Check directories
+      run: |
+        echo "Checking Screenshots directory: ${GITHUB_WORKSPACE}/RashmiProject/TestResults/Screenshots"
+        echo "Checking ExtentReports directory: ${GITHUB_WORKSPACE}/RashmiProject/TestResults/ExtentReports"
+
     # Step to ensure the Screenshots directory exists and move screenshots to the right path
     - name: Prepare Screenshots Directory
       if: failure()  # Only run this if tests fail
@@ -58,6 +64,11 @@ jobs:
           echo "No Extent Report found. Skipping copy operation."
         fi
 
+    # Ensure write permissions for directories
+    - name: Ensure write permissions for directories
+      run: |
+        chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
+
     # Send email notification with screenshot and Extent Report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
@@ -78,5 +89,5 @@ jobs:
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
-          ${{ github.workspace }}/TestResults/Screenshots/*
-          ${{ github.workspace }}/TestResults/ExtentReports/*
+          ${GITHUB_WORKSPACE}/TestResults/Screenshots/*
+          ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*
