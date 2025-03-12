@@ -52,12 +52,15 @@ jobs:
           echo "No screenshots found. Skipping screenshot copy operation."
         fi
 
-        # Check if the Extent report exists and copy it
+        # Always attempt to copy the Extent report, even if it's not found.
+        echo "Attempting to copy Extent report..."
         if [ -f "${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html" ]; then
           echo "Extent report found. Copying to the workspace."
           cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
         else
-          echo "No Extent report found. Skipping report copy operation."
+          echo "No Extent report found. Creating an empty placeholder file."
+          # Create an empty file if the report doesn't exist
+          touch ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
         fi
 
     # Send email notification with screenshot and report attached (via Gmail SMTP)
