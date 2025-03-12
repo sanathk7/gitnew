@@ -36,23 +36,21 @@ jobs:
     - name: Prepare Screenshots and Reports Directory
       if: failure()  # Only run this if tests fail
       run: |
-        # Ensure the Screenshots and Reports directories exist
-        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Screenshots
-        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Reports
-
-        # Log the current contents of the directory to debug
         echo "Current directory structure:"
         ls -R ${{ github.workspace }}/RashmiProject/TestResults
-
-        # Check if Screenshots directory exists and has files before copying
+        # Ensure Screenshots and Reports directories exist
+        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Screenshots
+        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Reports
+        # Log current directory structure for debugging
+        echo "Listing files in TestResults directory:"
+        ls -R ${{ github.workspace }}/RashmiProject/TestResults
+        # Check if Screenshots directory has files before copying
         if [ -d "${{ github.workspace }}/RashmiProject/TestResults/Screenshots" ] && [ "$(ls -A ${{ github.workspace }}/RashmiProject/TestResults/Screenshots)" ]; then
-          # Copy the screenshots to the workspace if the directory has files
           cp -r ${{ github.workspace }}/RashmiProject/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
           echo "Screenshots copied successfully."
         else
           echo "No screenshots found. Skipping screenshot copy operation."
         fi
-
         # Check if the Extent report exists and copy it
         if [ -f "${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html" ]; then
           cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
