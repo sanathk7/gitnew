@@ -329,7 +329,8 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+        // Updated to use the GITHUB_WORKSPACE environment variable for GitHub Actions
+        private static string screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
 
         // Hook to initialize the browser before each scenario
         [BeforeScenario]
@@ -380,6 +381,7 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
+                // Log the screenshot file path
                 Console.WriteLine($"Screenshot saved to: {screenshotFilePath}");
 
                 // Check if the screenshot was captured correctly
@@ -399,4 +401,3 @@ namespace RashmiProject.Utilities
         }
     }
 }
-
