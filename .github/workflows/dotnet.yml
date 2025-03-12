@@ -51,26 +51,13 @@ jobs:
           echo "No screenshots found. Skipping copy operation."
         fi
 
-    # Step to ensure the ExtentReports directory exists and move the report if it was generated
-    - name: Prepare ExtentReport Directory
-      if: failure()  # Only run this if tests fail
-      run: |
-        echo "Checking for ExtentReports directory"
-        if [ -d "${GITHUB_WORKSPACE}/RashmiProject/TestResults/ExtentReports" ]; then
-          echo "ExtentReports directory found. Copying reports..."
-          mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
-          cp -r "${GITHUB_WORKSPACE}/RashmiProject/TestResults/ExtentReports/*" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
-        else
-          echo "No Extent Report found. Skipping copy operation."
-        fi
-
     # Ensure write permissions for directories
     - name: Ensure write permissions for TestResults
       run: |
         chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
 
-    # Send email notification with screenshot and Extent Report attached (via Gmail SMTP)
-    - name: Send email notification
+    # Send email notification with screenshot attached (without Extent Report)
+    - name: Send email notification with screenshot
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
@@ -78,16 +65,13 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot and Extent Report Attached"
+        subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
-
-          One or more tests have failed. Please find the screenshot and Extent Report attached for your reference.
-
+          One or more tests have failed. Please find the screenshot attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
           ${GITHUB_WORKSPACE}/TestResults/Screenshots/*
-          ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*
