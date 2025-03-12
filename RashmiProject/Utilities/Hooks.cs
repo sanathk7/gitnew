@@ -417,17 +417,13 @@ namespace RashmiProject.Utilities
         public static IWebDriver driver;
         private static ExtentReports extentReports;
         private static ExtentTest test;
-        private static string reportPath;
-        private static string screenshotsFolderPath;
+        private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
+        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
 
         // Setup before tests run
         [SetUp]
         public void BeforeTest()
         {
-            // Define report path and screenshot folder path with respect to GitHub Actions workspace
-            reportPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "ExtentReports");
-            screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
-
             // Ensure the ExtentReports directory exists
             if (!Directory.Exists(reportPath))
             {
@@ -504,7 +500,7 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                // Debugging log to verify the file path
+                // Log the screenshot path for debugging
                 Console.WriteLine("Screenshot saved at: " + screenshotFilePath);
 
                 // Return the screenshot path to be attached to the report
