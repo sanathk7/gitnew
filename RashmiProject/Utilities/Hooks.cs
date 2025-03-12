@@ -402,7 +402,6 @@ namespace RashmiProject.Utilities
     }
 }
 */
-
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using NUnit.Framework;
@@ -410,11 +409,9 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System;
 using System.IO;
-using TechTalk.SpecFlow;
 
 namespace RashmiProject.Utilities
 {
-    [Binding]
     public class Hooks
     {
         private static IWebDriver driver;
@@ -423,9 +420,9 @@ namespace RashmiProject.Utilities
         private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
         private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
 
-        // Hook to initialize the browser and Extent Report before each scenario
-        [BeforeScenario]
-        public void BeforeScenario()
+        // Setup before tests run
+        [SetUp]
+        public void BeforeTest()
         {
             // Ensure the ExtentReports directory exists
             if (!Directory.Exists(reportPath))
@@ -447,13 +444,13 @@ namespace RashmiProject.Utilities
             driver = new ChromeDriver(options);
             driver.Manage().Window.Maximize();
 
-            // Start a new test for each scenario
-            test = extentReports.CreateTest(ScenarioContext.Current.ScenarioInfo.Title);
+            // Start a new test for each execution
+            test = extentReports.CreateTest("Test Execution");
         }
 
-        // Hook to close the browser and save Extent Report after each scenario
-        [AfterScenario]
-        public void AfterScenario()
+        // Cleanup after each test run
+        [TearDown]
+        public void AfterTest()
         {
             // Log whether the report was generated
             if (extentReports != null)
@@ -461,8 +458,8 @@ namespace RashmiProject.Utilities
                 Console.WriteLine("Extent Report generated at: " + reportPath);
             }
 
-            // Take screenshot if the scenario fails
-            if (ScenarioContext.Current.TestError != null)
+            // Take screenshot if the test fails
+            if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Failed)
             {
                 TakeScreenshot();
                 test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotsFolderPath).Build());
