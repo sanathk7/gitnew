@@ -416,10 +416,10 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        private static ExtentReports extentReports;
-        private static ExtentTest test;
-        private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
-        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+        public static ExtentReports extentReports;
+        public static ExtentTest test;
+        public static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
+        public  static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
 
         // Setup before tests run
         [SetUp]
@@ -462,8 +462,8 @@ namespace RashmiProject.Utilities
             // Take screenshot if the test fails
             if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Failed)
             {
-                TakeScreenshot();
-                test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotsFolderPath).Build());
+                string screenshotPath = TakeScreenshot();
+                test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
             }
             else
             {
@@ -480,7 +480,7 @@ namespace RashmiProject.Utilities
         }
 
         // Method to take a screenshot
-        private void TakeScreenshot()
+        private string TakeScreenshot()
         {
             try
             {
@@ -498,14 +498,14 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                // Attach screenshot to ExtentReport
-                test.AddScreenCaptureFromPath(screenshotFilePath);
+                // Return the screenshot path to be attached to the report
+                return screenshotFilePath;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error while taking screenshot: " + ex.Message);
+                return string.Empty;
             }
         }
     }
 }
-
