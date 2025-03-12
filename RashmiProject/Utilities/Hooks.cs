@@ -578,13 +578,14 @@ namespace RashmiProject.Utilities
 //     }
 // }
 
-
 using System;
 using System.IO;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
+using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
 
 namespace RashmiProject.Utilities
 {
@@ -592,14 +593,32 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        
-        // Ensure the screenshots folder path matches the GitHub Actions workspace
+        private static ExtentReports extent;
+        private static ExtentTest test;
+        private static string reportDirectory = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "ExtentReports");
         private static string screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
+        private static string reportFile = Path.Combine(reportDirectory, "TestReport.html");
+
+        static Hooks()
+        {
+            // Initialize ExtentReports
+            if (!Directory.Exists(reportDirectory))
+            {
+                Directory.CreateDirectory(reportDirectory);
+            }
+
+            var htmlReporter = new ExtentHtmlReporter(reportFile);
+            extent = new ExtentReports();
+            extent.AttachReporter(htmlReporter);
+        }
 
         // Hook to initialize the browser before each scenario
         [BeforeScenario]
         public void BeforeScenario()
         {
+            // Start ExtentReport for the scenario
+            test = extent.CreateTest(ScenarioContext.Current.ScenarioInfo.Title);
+
             // Chrome options for headless mode
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("--headless");
@@ -614,10 +633,16 @@ namespace RashmiProject.Utilities
         [AfterScenario]
         public void AfterScenario()
         {
-            // Take a screenshot if the scenario fails
+            // If the scenario fails, add failure information and attach the screenshot
             if (ScenarioContext.Current.TestError != null)
             {
-                TakeScreenshot();
+                string errorMessage = ScenarioContext.Current.TestError.Message;
+                test.Fail(errorMessage);
+                AttachScreenshot(driver);  // Attach screenshot for failed test
+            }
+            else
+            {
+                test.Pass("Test passed successfully");
             }
 
             // Close the browser after the scenario is finished
@@ -625,10 +650,13 @@ namespace RashmiProject.Utilities
             {
                 driver.Quit();  // Close and dispose the driver
             }
+
+            // End the test in the Extent Report
+            extent.Flush();
         }
 
         // Method to take a screenshot
-        private void TakeScreenshot()
+        private void AttachScreenshot(IWebDriver driver)
         {
             try
             {
@@ -647,30 +675,13 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                // Output the screenshot path to the console for debugging
+                // Attach the screenshot to the Extent Report
+                test.AddScreenCaptureFromPath(screenshotFilePath);
                 Console.WriteLine($"Screenshot saved to: {screenshotFilePath}");
-
-                // Check if the screenshot was captured correctly
-                if (File.Exists(screenshotFilePath))
-                {
-                    Console.WriteLine($"Screenshot file found: {screenshotFilePath}");
-                }
-                else
-                {
-                    Console.WriteLine("Screenshot file not found.");
-                }
-
-                // Log the contents of the screenshots directory to help with troubleshooting
-                var directoryContents = Directory.GetFiles(screenshotsFolderPath);
-                Console.WriteLine("Files in the Screenshots directory:");
-                foreach (var file in directoryContents)
-                {
-                    Console.WriteLine(file);
-                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while taking screenshot: " + ex.Message);
+                test.Info("Error while attaching screenshot: " + ex.Message);
             }
         }
     }
