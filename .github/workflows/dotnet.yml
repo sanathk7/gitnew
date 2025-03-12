@@ -36,10 +36,18 @@ jobs:
     - name: Prepare Screenshots Directory
       if: failure()  # Only run this if tests fail
       run: |
-        # Check if the screenshots directory exists and move any screenshots if present
+        # Ensure the screenshots directory exists
         if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
+          # Ensure the destination directory exists
           mkdir -p ${{ github.workspace }}/TestResults/Screenshots
-          cp -r ${{ github.workspace }}/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+
+          # Loop through all files in the screenshots directory and copy them
+          for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
+            # Only copy if the file is not already in the destination
+            if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
+              cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
+            fi
+          done
         else
           echo "No screenshots found. Skipping copy operation."
         fi
