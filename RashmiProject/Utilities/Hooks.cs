@@ -577,7 +577,7 @@ namespace RashmiProject.Utilities
 //         }
 //     }
 // }
-using System;
+/*using System;
 using System.IO;
 using NUnit.Framework;
 using OpenQA.Selenium;
@@ -724,6 +724,157 @@ namespace RashmiProject.Utilities
                  return null;
              }
          }*/
+       /* private string CaptureScreenshot(string stepName)
+        {
+            try
+            {
+                if (driver == null || driver.WindowHandles.Count == 0)
+                {
+                    TestContext.Progress.WriteLine("WebDriver is not initialized or no active window. Skipping screenshot.");
+                    return null;
+                }
+
+                // Introduce small wait before capturing the screenshot
+                Thread.Sleep(500);
+
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                string sanitizedStepName = string.Join("_", stepName.Split(Path.GetInvalidFileNameChars()));
+                string filePath = Path.Combine(screenshotsFolderPath, $"{sanitizedStepName}.png");
+
+                screenshot.SaveAsFile(filePath);
+                TestContext.Progress.WriteLine($"Screenshot saved to: {filePath}");
+
+                return filePath;
+            }
+            catch (Exception ex)
+            {
+                TestContext.Progress.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                return null;
+            }
+        }*/
+using System;
+using System.IO;
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
+using TechTalk.SpecFlow;
+using System.Threading;
+
+namespace RashmiProject.Utilities
+{
+    [Binding]
+    public class Hooks
+    {
+        public static IWebDriver driver;
+        private static ExtentReports _extent;
+        private static ExtentTest _feature;
+        private ExtentTest _scenario;
+        private static ExtentSparkReporter _sparkReporter;
+        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+        private static string reportsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Reports");
+
+        // Hook to initialize the browser and ExtentReports before the test run
+        [BeforeTestRun]
+        public static void BeforeTestRun()
+        {
+            string reportPath = Path.Combine(reportsFolderPath, "ExtentReport.html");
+
+            // Ensure the Reports directory is created
+            Directory.CreateDirectory(reportsFolderPath);
+
+            _sparkReporter = new ExtentSparkReporter(reportPath);
+            _extent = new ExtentReports();
+            _extent.AttachReporter(_sparkReporter);
+
+            TestContext.Progress.WriteLine($"Extent report initialized at: {reportPath}"); // Debug output to confirm report location
+        }
+
+        // Hook to initialize the ExtentTest for the feature
+        [BeforeFeature]
+        public static void BeforeFeature(FeatureContext featureContext)
+        {
+            _feature = _extent.CreateTest(featureContext.FeatureInfo.Title);
+        }
+
+        // Hook to initialize the browser and scenario
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--window-size=1920x1080");
+
+            driver = new ChromeDriver(options);
+            driver.Manage().Window.Maximize();
+
+            _scenario = _feature.CreateNode(FeatureContext.Current.FeatureInfo.Title);  // Create scenario report
+
+            // Ensure screenshots directory exists
+            if (!Directory.Exists(screenshotsFolderPath))
+            {
+                Directory.CreateDirectory(screenshotsFolderPath);
+            }
+        }
+
+        // Hook to capture screenshots and log steps in ExtentReports
+        [AfterStep]
+        public void AfterStep()
+        {
+            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+            string screenshotPath = CaptureScreenshot(stepText);
+
+            if (ScenarioContext.Current.TestError == null)
+            {
+                // Log successful step
+                if (screenshotPath != null)
+                {
+                    _scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                }
+                else
+                {
+                    _scenario.Log(Status.Pass, stepText);
+                }
+            }
+            else
+            {
+                // Log failed step
+                if (screenshotPath != null)
+                {
+                    _scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                }
+                else
+                {
+                    _scenario.Log(Status.Fail, stepText);
+                }
+
+                // Log the error message
+                _scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+            }
+        }
+
+        // Hook to clean up after the scenario
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            // Close the driver after the scenario ends
+            if (driver != null)
+            {
+                driver.Quit();
+            }
+        }
+
+        // Hook to flush the report after the test run
+        [AfterTestRun]
+        public static void AfterTestRun()
+        {
+            // Ensure to flush the report, even if no tests were run
+            _extent.Flush();  // Save the report after all tests are completed
+            TestContext.Progress.WriteLine("Extent report flushed.");
+        }
+
+        // Capture and save a screenshot, returning its file path
         private string CaptureScreenshot(string stepName)
         {
             try
@@ -752,6 +903,8 @@ namespace RashmiProject.Utilities
                 return null;
             }
         }
+    }
+}
 
     }
 }
