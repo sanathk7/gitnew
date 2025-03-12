@@ -315,7 +315,7 @@ namespace RashmiProject.Utilities
     }
 }
 */
-
+/*
 using System;
 using System.IO;
 using NUnit.Framework;
@@ -397,6 +397,104 @@ namespace RashmiProject.Utilities
             catch (Exception ex)
             {
                 Console.WriteLine("Error while taking screenshot: " + ex.Message);
+            }
+        }
+    }
+}
+*/
+
+
+using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using System;
+using System.IO;
+using TechTalk.SpecFlow;
+
+namespace RashmiProject.Utilities
+{
+    [Binding]
+    public class Hooks
+    {
+        private static IWebDriver driver;
+        private static ExtentReports extentReports;
+        private static ExtentTest test;
+        private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
+        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+
+        // Hook to initialize the browser and Extent Report before each scenario
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            // Setup ExtentReports
+            var htmlReporter = new ExtentSparkReporter(reportPath);
+            extentReports = new ExtentReports();
+            extentReports.AttachReporter(htmlReporter);
+
+            // Chrome options for headless mode
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--window-size=1920x1080");
+
+            // Initialize ChromeDriver with options
+            driver = new ChromeDriver(options);
+            driver.Manage().Window.Maximize();
+
+            // Start a new test for each scenario
+            test = extentReports.CreateTest(ScenarioContext.Current.ScenarioInfo.Title);
+        }
+
+        // Hook to close the browser and save Extent Report after each scenario
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            // Take screenshot if the scenario fails
+            if (ScenarioContext.Current.TestError != null)
+            {
+                TakeScreenshot();
+                test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotsFolderPath).Build());
+            }
+            else
+            {
+                test.Pass("Test Passed");
+            }
+
+            // Close the driver and flush the Extent Report
+            if (driver != null)
+            {
+                driver.Quit();
+            }
+
+            extentReports.Flush();
+        }
+
+        // Method to take a screenshot
+        private void TakeScreenshot()
+        {
+            try
+            {
+                // Ensure the screenshots directory exists
+                if (!Directory.Exists(screenshotsFolderPath))
+                {
+                    Directory.CreateDirectory(screenshotsFolderPath);
+                }
+
+                // Create a unique filename with timestamp
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string screenshotFilePath = Path.Combine(screenshotsFolderPath, $"screenshot_{timestamp}.png");
+
+                // Capture the screenshot
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                screenshot.SaveAsFile(screenshotFilePath);
+
+                // Attach screenshot to ExtentReport
+                test.AddScreenCaptureFromPath(screenshotFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while taking screenshot");
             }
         }
     }
