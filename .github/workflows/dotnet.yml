@@ -69,6 +69,12 @@ jobs:
       run: |
         chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
 
+    # Clean up temporary files after email is sent (Optional)
+    - name: Clean up temporary files
+      run: |
+        rm -rf ${GITHUB_WORKSPACE}/TestResults/Screenshots
+        rm -rf ${GITHUB_WORKSPACE}/TestResults/ExtentReports
+
     # Send email notification with screenshot and Extent Report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
