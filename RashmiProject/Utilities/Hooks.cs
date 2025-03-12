@@ -659,6 +659,14 @@ namespace RashmiProject.Utilities
                 {
                     Console.WriteLine("Screenshot file not found.");
                 }
+
+                // Log the contents of the screenshots directory to help with troubleshooting
+                var directoryContents = Directory.GetFiles(screenshotsFolderPath);
+                Console.WriteLine("Files in the Screenshots directory:");
+                foreach (var file in directoryContents)
+                {
+                    Console.WriteLine(file);
+                }
             }
             catch (Exception ex)
             {
