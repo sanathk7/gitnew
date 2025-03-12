@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
@@ -55,6 +55,7 @@ jobs:
     - name: Ensure write permissions for TestResults
       run: |
         chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
+        ls -l ${GITHUB_WORKSPACE}/TestResults  # List files to check permissions
 
     # Send email notification with screenshot attached (without Extent Report)
     - name: Send email notification with screenshot
