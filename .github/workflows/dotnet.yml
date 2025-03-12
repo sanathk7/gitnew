@@ -47,10 +47,10 @@ jobs:
     # Upload screenshots directory as artifact if there are screenshots
     - name: Upload screenshots as artifacts
       if: always()  # Run even if tests pass or fail
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: TestResults/Screenshots/*  # Make sure this path is correct
+        path: TestResults/Screenshots/*  # Ensure the screenshots directory and files exist
 
     # Send email notification with screenshot attached (via Gmail SMTP)
     - name: Send email notification
@@ -71,4 +71,4 @@ jobs:
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: TestResults/Screenshots/*
+        attachments: TestResults/Screenshots/*  # Ensure the path is correct for screenshots
