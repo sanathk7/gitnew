@@ -1,74 +1,96 @@
-name: .NET
 
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using System;
+using System.IO;
+using TechTalk.SpecFlow;
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+namespace RashmiProject.Utilities
+{
+    [Binding]
+    public class Hooks
+    {
+        private static IWebDriver driver;
+        private static ExtentReports extentReports;
+        private static ExtentTest test;
+        private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
+        private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+        // Hook to initialize the browser and Extent Report before each scenario
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            // Setup ExtentReports
+            var htmlReporter = new ExtentSparkReporter(reportPath);
+            extentReports = new ExtentReports();
+            extentReports.AttachReporter(htmlReporter);
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0
+            // Chrome options for headless mode
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--window-size=1920x1080");
 
-    - name: Restore dependencies
-      run: dotnet restore
+            // Initialize ChromeDriver with options
+            driver = new ChromeDriver(options);
+            driver.Manage().Window.Maximize();
 
-    - name: Build project
-      run: dotnet build --no-restore
+            // Start a new test for each scenario
+            test = extentReports.CreateTest(ScenarioContext.Current.ScenarioInfo.Title);
+        }
 
-    - name: Give execute permissions to selenium-manager
-      run: chmod +x /home/runner/work/gitnew/gitnew/RashmiProject/bin/Debug/net6.0/selenium-manager/linux/selenium-manager
+        // Hook to close the browser and save Extent Report after each scenario
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            // Take screenshot if the scenario fails
+            if (ScenarioContext.Current.TestError != null)
+            {
+                TakeScreenshot();
+                test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotsFolderPath).Build());
+            }
+            else
+            {
+                test.Pass("Test Passed");
+            }
 
-    - name: Run tests with SpecFlow filter
-      run: |
-        dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
+            // Close the driver and flush the Extent Report
+            if (driver != null)
+            {
+                driver.Quit();
+            }
 
-    # Step to ensure the Screenshots directory exists and move screenshots to the right path
-    - name: Prepare Screenshots Directory
-      if: failure()  # Only run this if tests fail
-      run: |
-        # Ensure the screenshots directory exists
-        if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
-          # Ensure the destination directory exists
-          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+            extentReports.Flush();
+        }
 
-          # Loop through all files in the screenshots directory and copy them
-          for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
-            # Only copy if the file is not already in the destination
-            if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
-              cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
-            fi
-          done
-        else
-          echo "No screenshots found. Skipping copy operation."
-        fi
+        // Method to take a screenshot
+        private void TakeScreenshot()
+        {
+            try
+            {
+                // Ensure the screenshots directory exists
+                if (!Directory.Exists(screenshotsFolderPath))
+                {
+                    Directory.CreateDirectory(screenshotsFolderPath);
+                }
 
-    # Send email notification with screenshot attached (via Gmail SMTP)
-    - name: Send email notification
-      if: failure()  # Only send email if the test fails
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 587
-        username: ${{ secrets.GMAIL_USERNAME }}
-        password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot Attached"
-        body: |
-          Hello Developer,
+                // Create a unique filename with timestamp
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string screenshotFilePath = Path.Combine(screenshotsFolderPath, $"screenshot_{timestamp}.png");
 
-          One or more tests have failed. Please find the screenshot attached for your reference.
+                // Capture the screenshot
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                screenshot.SaveAsFile(screenshotFilePath);
 
-          Regards,
-          Your GitHub Actions
-        to: ${{ secrets.DEVELOPER_EMAIL }}
-        from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
+                // Attach screenshot to ExtentReport
+                test.AddScreenCaptureFromPath(screenshotFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while taking screenshot: " + ex.Message);
+            }
+        }
+    }
+}
