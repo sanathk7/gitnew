@@ -36,15 +36,26 @@ jobs:
     - name: Prepare Screenshots and Reports Directory
       if: failure()  # Only run this if tests fail
       run: |
-        # Ensure the Screenshots directory exists
+        # Ensure the Screenshots and Reports directories exist
         mkdir -p ${{ github.workspace }}/TestResults/Screenshots
         mkdir -p ${{ github.workspace }}/TestResults/Reports
 
-        # Copy the screenshots to the workspace
-        cp -r ${{ github.workspace }}/RashmiProject/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+        # Check if Screenshots directory exists and has files before copying
+        if [ -d "${{ github.workspace }}/RashmiProject/TestResults/Screenshots" ] && [ "$(ls -A ${{ github.workspace }}/RashmiProject/TestResults/Screenshots)" ]; then
+          # Copy the screenshots to the workspace if the directory has files
+          cp -r ${{ github.workspace }}/RashmiProject/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+          echo "Screenshots copied successfully."
+        else
+          echo "No screenshots found. Skipping screenshot copy operation."
+        fi
 
-        # Copy the ExtentReport to the workspace
-        cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
+        # Check if the Extent report exists and copy it
+        if [ -f "${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html" ]; then
+          cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
+          echo "Extent report copied successfully."
+        else
+          echo "No Extent report found. Skipping report copy operation."
+        fi
 
     # Send email notification with screenshot and report attached (via Gmail SMTP)
     - name: Send email notification
