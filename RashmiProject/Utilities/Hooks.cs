@@ -577,7 +577,6 @@ namespace RashmiProject.Utilities
 //         }
 //     }
 // }
-
 using System;
 using System.IO;
 using NUnit.Framework;
@@ -605,12 +604,15 @@ namespace RashmiProject.Utilities
         public static void BeforeTestRun()
         {
             string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "Reports", "ExtentReport.html");
-            Directory.CreateDirectory(Path.GetDirectoryName(reportPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(reportPath)); // Make sure the Reports directory is created
 
             _sparkReporter = new ExtentSparkReporter(reportPath);
             _extent = new ExtentReports();
             _extent.AttachReporter(_sparkReporter);
+
+            TestContext.Progress.WriteLine($"Extent report generated at: {reportPath}"); // Debug output to confirm report location
         }
+
 
         // Hook to initialize the ExtentTest for the feature
         [BeforeFeature]
@@ -694,6 +696,34 @@ namespace RashmiProject.Utilities
         }
 
         // Capture and save a screenshot, returning its file path
+        /* private string CaptureScreenshot(string stepName)
+         {
+             try
+             {
+                 if (driver == null || driver.WindowHandles.Count == 0)
+                 {
+                     TestContext.Progress.WriteLine("WebDriver is not initialized or no active window. Skipping screenshot.");
+                     return null;
+                 }
+
+                 // Introduce small wait before capturing the screenshot
+                 Thread.Sleep(500);
+
+                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                 string sanitizedStepName = string.Join("_", stepName.Split(Path.GetInvalidFileNameChars()));
+                 string filePath = Path.Combine(screenshotsFolderPath, $"{sanitizedStepName}.png");
+
+                 screenshot.SaveAsFile(filePath);
+                 TestContext.Progress.WriteLine($"Screenshot saved to: {filePath}");
+
+                 return filePath;
+             }
+             catch (Exception ex)
+             {
+                 TestContext.Progress.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                 return null;
+             }
+         }*/
         private string CaptureScreenshot(string stepName)
         {
             try
@@ -722,5 +752,6 @@ namespace RashmiProject.Utilities
                 return null;
             }
         }
+
     }
 }
