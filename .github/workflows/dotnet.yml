@@ -32,13 +32,13 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debug step to check directories after test run
+    # Debug step to check the directory and files after tests have run
     - name: Check directories after test run
       run: |
         echo "Listing files in the workspace:"
         ls -R $GITHUB_WORKSPACE
         echo "Checking the TestResults/Screenshots directory contents:"
-        ls -R $GITHUB_WORKSPACE/TestResults/Screenshots
+        ls -R $GITHUB_WORKSPACE/TestResults/Screenshots || echo "No Screenshots directory found"
 
     # Step to ensure the Screenshots directory exists and move screenshots to the right path
     - name: Prepare Screenshots Directory
@@ -47,20 +47,13 @@ jobs:
         echo "Checking for Screenshots directory in TestResults"
         if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
           echo "Screenshots directory found. Copying screenshots..."
-          # Log the files in the directory to ensure the screenshots are there
+          # List files to debug if screenshots are actually saved
           ls -R "${GITHUB_WORKSPACE}/TestResults/Screenshots"
-          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
+          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"  # Create the directory if it doesn't exist
           cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
         else
-          echo "No screenshots found. Skipping copy operation."
+          echo "No screenshots found in TestResults/Screenshots. Skipping copy operation."
         fi
-
-    # Step to copy ExtentReports HTML to workspace
-    - name: Copy Extent Reports HTML
-      run: |
-        echo "Copying Extent Reports..."
-        mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
-        cp -r "${GITHUB_WORKSPACE}/TestResults/ExtentReports/*" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
 
     # Ensure write permissions for directories
     - name: Ensure write permissions for TestResults
@@ -68,8 +61,8 @@ jobs:
         chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
         ls -l ${GITHUB_WORKSPACE}/TestResults  # List files to check permissions
 
-    # Send email notification with screenshot and extent report attached
-    - name: Send email notification with screenshot and report
+    # Send email notification with screenshot attached
+    - name: Send email notification with screenshot
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
@@ -77,14 +70,13 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot and Extent Report Attached"
+        subject: "Test Failed - Screenshot Attached"
         body: |
           Hello Developer,
-          One or more tests have failed. Please find the screenshot and extent report attached for your reference.
+          One or more tests have failed. Please find the screenshot attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
           ${GITHUB_WORKSPACE}/TestResults/Screenshots/*
-          ${GITHUB_WORKSPACE}/TestResults/ExtentReports/TestReport.html
