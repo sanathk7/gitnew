@@ -402,8 +402,6 @@ namespace RashmiProject.Utilities
     }
 }
 */
-using AventStack.ExtentReports;
-using AventStack.ExtentReports.Reporter;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -415,26 +413,12 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        private static ExtentReports extentReports;
-        private static ExtentTest test;
-        private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
         private static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
 
         // Setup before tests run
         [SetUp]
         public void BeforeTest()
         {
-            // Ensure the ExtentReports directory exists
-            if (!Directory.Exists(reportPath))
-            {
-                Directory.CreateDirectory(reportPath);
-            }
-
-            // Setup ExtentReports
-            var htmlReporter = new ExtentSparkReporter(reportPath);
-            extentReports = new ExtentReports();
-            extentReports.AttachReporter(htmlReporter);
-
             // Chrome options for headless mode
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("--headless");
@@ -443,46 +427,27 @@ namespace RashmiProject.Utilities
             // Initialize ChromeDriver with options
             driver = new ChromeDriver(options);
             driver.Manage().Window.Maximize();
-
-            // Start a new test for each execution
-            test = extentReports.CreateTest("Test Execution");
         }
 
         // Cleanup after each test run
         [TearDown]
         public void AfterTest()
         {
-            // Log whether the report was generated
-            if (extentReports != null)
-            {
-                Console.WriteLine("Extent Report generated at: " + reportPath);
-            }
-
             // Take screenshot if the test fails
             if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Failed)
             {
-                string screenshotPath = TakeScreenshot();
-                if (!string.IsNullOrEmpty(screenshotPath))
-                {
-                    test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
-                }
-            }
-            else
-            {
-                test.Pass("Test Passed");
+                TakeScreenshot();
             }
 
-            // Close the driver and flush the Extent Report
+            // Close the driver
             if (driver != null)
             {
                 driver.Quit();
             }
-
-            extentReports.Flush();
         }
 
         // Method to take a screenshot
-        private string TakeScreenshot()
+        private void TakeScreenshot()
         {
             try
             {
@@ -500,16 +465,12 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                // Log the screenshot path for debugging
+                // You can also log the file path if needed (optional)
                 Console.WriteLine("Screenshot saved at: " + screenshotFilePath);
-
-                // Return the screenshot path to be attached to the report
-                return screenshotFilePath;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error while taking screenshot: " + ex.Message);
-                return string.Empty;
             }
         }
     }
