@@ -403,7 +403,6 @@ namespace RashmiProject.Utilities
 }
 */
 
-
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using NUnit.Framework;
@@ -428,6 +427,12 @@ namespace RashmiProject.Utilities
         [BeforeScenario]
         public void BeforeScenario()
         {
+            // Ensure the ExtentReports directory exists
+            if (!Directory.Exists(reportPath))
+            {
+                Directory.CreateDirectory(reportPath);
+            }
+
             // Setup ExtentReports
             var htmlReporter = new ExtentSparkReporter(reportPath);
             extentReports = new ExtentReports();
@@ -450,6 +455,12 @@ namespace RashmiProject.Utilities
         [AfterScenario]
         public void AfterScenario()
         {
+            // Log whether the report was generated
+            if (extentReports != null)
+            {
+                Console.WriteLine("Extent Report generated at: " + reportPath);
+            }
+
             // Take screenshot if the scenario fails
             if (ScenarioContext.Current.TestError != null)
             {
@@ -494,7 +505,7 @@ namespace RashmiProject.Utilities
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while taking screenshot");
+                Console.WriteLine("Error while taking screenshot: " + ex.Message);
             }
         }
     }
