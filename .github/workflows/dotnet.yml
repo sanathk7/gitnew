@@ -37,9 +37,9 @@ jobs:
       if: failure()  # Only run this if tests fail
       run: |
         # Check if the screenshots directory exists and move any screenshots if present
-        if [ -d "TestResults/Screenshots" ]; then
+        if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
           mkdir -p ${{ github.workspace }}/TestResults/Screenshots
-          cp -r TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+          cp -r ${{ github.workspace }}/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
         else
           echo "No screenshots found. Skipping copy operation."
         fi
