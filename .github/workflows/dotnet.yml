@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
@@ -31,26 +31,45 @@ jobs:
     - name: Run tests with SpecFlow filter
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
+
+    # Debug step to check directories after test run
+    - name: Check directories after test run
+      run: |
+        echo "Listing files in the workspace:"
+        ls -R $GITHUB_WORKSPACE
+        echo "Checking the TestResults/Screenshots directory contents:"
+        ls -R $GITHUB_WORKSPACE/TestResults/Screenshots
+
     # Step to ensure the Screenshots directory exists and move screenshots to the right path
     - name: Prepare Screenshots Directory
       if: failure()  # Only run this if tests fail
       run: |
-        # Ensure the screenshots directory exists
-        if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
-          # Ensure the destination directory exists
-          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
-          # Loop through all files in the screenshots directory and copy them
-          for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
-            # Only copy if the file is not already in the destination
-            if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
-              cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
-            fi
-          done
+        echo "Checking for Screenshots directory in TestResults"
+        if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
+          echo "Screenshots directory found. Copying screenshots..."
+          # Log the files in the directory to ensure the screenshots are there
+          ls -R "${GITHUB_WORKSPACE}/TestResults/Screenshots"
+          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
+          cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
         else
           echo "No screenshots found. Skipping copy operation."
         fi
-    # Send email notification with screenshot attached (via Gmail SMTP)
-    - name: Send email notification
+
+    # Step to copy ExtentReports HTML to workspace
+    - name: Copy Extent Reports HTML
+      run: |
+        echo "Copying Extent Reports..."
+        mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
+        cp -r "${GITHUB_WORKSPACE}/TestResults/ExtentReports/*" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
+
+    # Ensure write permissions for directories
+    - name: Ensure write permissions for TestResults
+      run: |
+        chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
+        ls -l ${GITHUB_WORKSPACE}/TestResults  # List files to check permissions
+
+    # Send email notification with screenshot and extent report attached
+    - name: Send email notification with screenshot and report
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
       with:
@@ -58,12 +77,14 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot Attached"
+        subject: "Test Failed - Screenshot and Extent Report Attached"
         body: |
           Hello Developer,
-          One or more tests have failed. Please find the screenshot attached for your reference.
+          One or more tests have failed. Please find the screenshot and extent report attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
-        attachments: ${{ github.workspace }}/TestResults/Screenshots/*
+        attachments: |
+          ${GITHUB_WORKSPACE}/TestResults/Screenshots/*
+          ${GITHUB_WORKSPACE}/TestResults/ExtentReports/TestReport.html
