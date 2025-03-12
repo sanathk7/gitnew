@@ -33,10 +33,12 @@ jobs:
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
     # Debug step to check directories
-    - name: Check directories
+    - name: Check directories and verify screenshots location
       run: |
         echo "Listing files in the workspace:"
         ls -R $GITHUB_WORKSPACE
+        echo "Checking the TestResults/Screenshots directory contents:"
+        ls -R $GITHUB_WORKSPACE/TestResults/Screenshots
 
     # Step to ensure the Screenshots directory exists and move screenshots to the right path
     - name: Prepare Screenshots Directory
