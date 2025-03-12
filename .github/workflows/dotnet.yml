@@ -32,8 +32,8 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debug step to check directories
-    - name: Check directories and verify screenshots location
+    # Debug step to check directories after tests
+    - name: Check directories after test run
       run: |
         echo "Listing files in the workspace:"
         ls -R $GITHUB_WORKSPACE
@@ -47,6 +47,8 @@ jobs:
         echo "Checking for Screenshots directory in TestResults"
         if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
           echo "Screenshots directory found. Copying screenshots..."
+          # Log the files in the directory to ensure the screenshots are there
+          ls -R "${GITHUB_WORKSPACE}/TestResults/Screenshots"
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
           cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
         else
