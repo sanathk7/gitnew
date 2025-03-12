@@ -656,7 +656,7 @@ namespace RashmiProject.Utilities
         }
 
         // Method to take a screenshot
-        private void AttachScreenshot(IWebDriver driver)
+        private void TakeScreenshot()
         {
             try
             {
@@ -675,13 +675,22 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                // Attach the screenshot to the Extent Report
-                test.AddScreenCaptureFromPath(screenshotFilePath);
+                // Output the screenshot path to the console for debugging
                 Console.WriteLine($"Screenshot saved to: {screenshotFilePath}");
+
+                // Check if the screenshot was captured correctly
+                if (File.Exists(screenshotFilePath))
+                {
+                    Console.WriteLine($"Screenshot file found: {screenshotFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine("Screenshot file not found.");
+                }
             }
             catch (Exception ex)
             {
-                test.Info("Error while attaching screenshot: " + ex.Message);
+                Console.WriteLine("Error while taking screenshot: " + ex.Message);
             }
         }
     }
