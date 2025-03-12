@@ -44,7 +44,7 @@ jobs:
     - name: Prepare Screenshots Directory
       if: failure()  # Only run this if tests fail
       run: |
-        echo "Checking for Screenshots directory"
+        echo "Checking for Screenshots directory in TestResults"
         if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
           echo "Screenshots directory found. Copying screenshots..."
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
