@@ -50,7 +50,7 @@ jobs:
           # List files to debug if screenshots are actually saved
           ls -R "${GITHUB_WORKSPACE}/TestResults/Screenshots"
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"  # Create the directory if it doesn't exist
-          cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/*" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
+          cp -r "${GITHUB_WORKSPACE}/TestResults/Screenshots/"* "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
         else
           echo "No screenshots found in TestResults/Screenshots. Skipping copy operation."
         fi
