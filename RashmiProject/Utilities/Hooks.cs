@@ -402,7 +402,6 @@ namespace RashmiProject.Utilities
     }
 }
 */
-
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using NUnit.Framework;
@@ -416,15 +415,19 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        public static ExtentReports extentReports;
-        public static ExtentTest test;
-        public static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
-        public  static string screenshotsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+        private static ExtentReports extentReports;
+        private static ExtentTest test;
+        private static string reportPath;
+        private static string screenshotsFolderPath;
 
         // Setup before tests run
         [SetUp]
         public void BeforeTest()
         {
+            // Define report path and screenshot folder path with respect to GitHub Actions workspace
+            reportPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "ExtentReports");
+            screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
+
             // Ensure the ExtentReports directory exists
             if (!Directory.Exists(reportPath))
             {
@@ -463,7 +466,10 @@ namespace RashmiProject.Utilities
             if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Failed)
             {
                 string screenshotPath = TakeScreenshot();
-                test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                if (!string.IsNullOrEmpty(screenshotPath))
+                {
+                    test.Fail("Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                }
             }
             else
             {
@@ -497,6 +503,9 @@ namespace RashmiProject.Utilities
                 // Capture the screenshot
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
+
+                // Debugging log to verify the file path
+                Console.WriteLine("Screenshot saved at: " + screenshotFilePath);
 
                 // Return the screenshot path to be attached to the report
                 return screenshotFilePath;
