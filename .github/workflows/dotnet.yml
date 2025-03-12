@@ -35,8 +35,8 @@ jobs:
     # Debug step to check directories
     - name: Check directories
       run: |
-        echo "Checking Screenshots directory: ${GITHUB_WORKSPACE}/RashmiProject/TestResults/Screenshots"
-        echo "Checking ExtentReports directory: ${GITHUB_WORKSPACE}/RashmiProject/TestResults/ExtentReports"
+        echo "Listing files in the workspace:"
+        ls -R $GITHUB_WORKSPACE
 
     # Step to ensure the Screenshots directory exists and move screenshots to the right path
     - name: Prepare Screenshots Directory
@@ -65,15 +65,9 @@ jobs:
         fi
 
     # Ensure write permissions for directories
-    - name: Ensure write permissions for directories
+    - name: Ensure write permissions for TestResults
       run: |
         chmod -R 777 ${GITHUB_WORKSPACE}/TestResults
-
-    # Clean up temporary files after email is sent (Optional)
-    - name: Clean up temporary files
-      run: |
-        rm -rf ${GITHUB_WORKSPACE}/TestResults/Screenshots
-        rm -rf ${GITHUB_WORKSPACE}/TestResults/ExtentReports
 
     # Send email notification with screenshot and Extent Report attached (via Gmail SMTP)
     - name: Send email notification
