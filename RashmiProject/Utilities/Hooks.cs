@@ -607,9 +607,9 @@ namespace RashmiProject.Utilities
                 Directory.CreateDirectory(reportDirectory);
             }
 
-            var htmlReporter = new ExtentHtmlReporter(reportFile);
+            var sparkReporter = new ExtentSparkReporter(reportFile);
             extent = new ExtentReports();
-            extent.AttachReporter(htmlReporter);
+            extent.AttachReporter(sparkReporter);
         }
 
         // Hook to initialize the browser before each scenario
