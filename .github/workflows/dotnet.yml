@@ -54,6 +54,8 @@ jobs:
 
         # Always attempt to copy the Extent report, even if it's not found.
         echo "Attempting to copy Extent report..."
+        # Ensure the target Reports directory exists
+        mkdir -p ${{ github.workspace }}/TestResults/Reports
         if [ -f "${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html" ]; then
           echo "Extent report found. Copying to the workspace."
           cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
