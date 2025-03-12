@@ -414,7 +414,7 @@ namespace RashmiProject.Utilities
 {
     public class Hooks
     {
-        private static IWebDriver driver;
+        public static IWebDriver driver;
         private static ExtentReports extentReports;
         private static ExtentTest test;
         private static string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "ExtentReports");
