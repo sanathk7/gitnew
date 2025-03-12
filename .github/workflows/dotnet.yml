@@ -37,12 +37,10 @@ jobs:
       if: failure()  # Only run this if tests fail
       run: |
         echo "Current directory structure:"
-        ls -R ${{ github.workspace }}/RashmiProject/TestResults
-        # Ensure Screenshots and Reports directories exist
+        # Ensure the TestResults and its subdirectories exist
         mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Screenshots
         mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Reports
         # Log current directory structure for debugging
-        echo "Listing files in TestResults directory:"
         ls -R ${{ github.workspace }}/RashmiProject/TestResults
         # Check if Screenshots directory has files before copying
         if [ -d "${{ github.workspace }}/RashmiProject/TestResults/Screenshots" ] && [ "$(ls -A ${{ github.workspace }}/RashmiProject/TestResults/Screenshots)" ]; then
