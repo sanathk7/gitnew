@@ -1,11 +1,12 @@
-
 name: .NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: 
+      - "master"
   pull_request:
-    branches: [ "master" ]
+    branches: 
+      - "master"
 
 jobs:
   build:
@@ -33,25 +34,9 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Debugging: List contents of directories for Screenshots and ExtentReports
-    - name: List Files in TestResults/Screenshots
-      run: ls -la "${GITHUB_WORKSPACE}/TestResults/Screenshots"
-
     - name: List Files in TestResults/ExtentReports
       run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
 
-    # Check if extent report file exists before proceeding with email
-    - name: Wait for Extent Report File
-      run: |
-        report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_2025-03-13_05-25-53.html"
-        if [ -f "$report_file" ]; then
-          echo "Extent report file exists: $report_file"
-        else
-          echo "Extent report file not found."
-          exit 1
-        fi
-
-    # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
@@ -69,5 +54,4 @@ jobs:
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
-          ${{ github.workspace }}/TestResults/Screenshots/*
-          ${{ github.workspace }}/TestResults/ExtentReports/*
+          ${{ github.workspace }}/TestResults/ExtentReports/*  # Attach all files in the folder
