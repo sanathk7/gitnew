@@ -416,49 +416,83 @@ namespace RashmiProject.Utilities
             scenario = feature.CreateNode("Scenario Name");  // Use actual scenario name
         }
 
-        [AfterStep]
-        public void AfterStep()
-        {
-            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+//         [AfterStep]
+//         public void AfterStep()
+//         {
+//             string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
 
-            // Capture screenshot after each step
-            var screenshotPath = TakeScreenshot();
-            TakeScreenshot1();
-            string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
-string screenshotFilePath = ConvertBase64ToImage(screenshotPath);
-            if (ScenarioContext.Current.TestError == null)
-            {
+//             // Capture screenshot after each step
+//             var screenshotPath = TakeScreenshot();
+//             TakeScreenshot1();
+//             string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
+// string screenshotFilePath = ConvertBase64ToImage(screenshotPath);
+//             if (ScenarioContext.Current.TestError == null)
+//             {
                 
-                // Attach screenshot directly to the report for passed steps
-                if (screenshotPath != null)
-                {
+//                 // Attach screenshot directly to the report for passed steps
+//                 if (screenshotPath != null)
+//                 {
 
-                    // Directly attach the screenshot from memory
-                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
-                }
-                else
-                {
-                    scenario.Log(Status.Pass, stepText);
-                }
-            }
-            else
-            {
-                TakeScreenshot1();
-                // Attach screenshot directly to the report for failed steps
-                if (screenshotPath != null)
-                {
-                    // Directly attach the screenshot from memory
-                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
-                }
-                else
-                {
-                    scenario.Log(Status.Fail, stepText);
-                }
+//                     // Directly attach the screenshot from memory
+//                     scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
+//                 }
+//                 else
+//                 {
+//                     scenario.Log(Status.Pass, stepText);
+//                 }
+//             }
+//             else
+//             {
+//                 TakeScreenshot1();
+//                 // Attach screenshot directly to the report for failed steps
+//                 if (screenshotPath != null)
+//                 {
+//                     // Directly attach the screenshot from memory
+//                     scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
+//                 }
+//                 else
+//                 {
+//                     scenario.Log(Status.Fail, stepText);
+//                 }
 
-                // Log the actual error message
-                scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
-            }
+//                 // Log the actual error message
+//                 scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+//             }
+//         }
+        [AfterStep]
+public void AfterStep()
+{
+    string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+
+    // Capture screenshot after each step
+    var screenshotPath = TakeScreenshot();
+
+    if (!string.IsNullOrEmpty(screenshotPath))
+    {
+        // Prepare the image tag to embed the base64 image inline
+        string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
+        
+        if (ScenarioContext.Current.TestError == null)
+        {
+            // Attach screenshot directly to the report for passed steps
+            scenario.Log(Status.Pass, stepText + imgTag);  // Append the image tag to the step text
         }
+        else
+        {
+            // Attach screenshot directly to the report for failed steps
+            scenario.Log(Status.Fail, stepText + imgTag);  // Append the image tag to the step text
+
+            // Log the actual error message if any
+            scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+        }
+    }
+    else
+    {
+        // Handle case when screenshot was not captured (optional)
+        scenario.Log(Status.Info, stepText);
+    }
+}
+
 
         [AfterScenario]
         public void AfterScenario()
