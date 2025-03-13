@@ -21,6 +21,14 @@ namespace RashmiProject.Utilities
         private ExtentTest scenario;
         private static ExtentSparkReporter sparkReporter;
 
+        // Inject ScenarioContext into the constructor
+        private readonly ScenarioContext _scenarioContext;
+
+        public Hooks(ScenarioContext scenarioContext)
+        {
+            _scenarioContext = scenarioContext;
+        }
+
         [BeforeScenario]
         public void BeforeScenario()
         {
@@ -48,12 +56,12 @@ namespace RashmiProject.Utilities
         [AfterStep]
         public void AfterStep()
         {
-            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+            string stepText = _scenarioContext.StepContext.StepInfo.Text;
 
             // Capture screenshot after each step
             var screenshotPath = TakeScreenshot();
 
-            if (ScenarioContext.Current.TestError == null)
+            if (_scenarioContext.TestError == null)
             {
                 // Attach screenshot directly to the report for passed steps
                 if (screenshotPath != null)
@@ -80,7 +88,7 @@ namespace RashmiProject.Utilities
                 }
 
                 // Log the actual error message
-                scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+                scenario.Log(Status.Fail, _scenarioContext.TestError.Message);
             }
         }
 
