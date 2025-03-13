@@ -243,7 +243,7 @@ namespace RashmiProject.Utilities
 
 ////////This part for screnshot attachment
 
-using System;
+/*using System;
 using System.IO;
 using NUnit.Framework;
 using OpenQA.Selenium;
@@ -364,3 +364,170 @@ namespace RashmiProject.Utilities
         }
     }
 }
+*/
+using System;
+using System.IO;
+using NUnit.Framework;
+using OpenQA.Selenium;
+using TechTalk.SpecFlow;
+using AventStack.ExtentReports;  // Importing the ExtentReports library
+using AventStack.ExtentReports.Reporter;
+using OpenQA.Selenium.Chrome;  // For the ExtentSparkReporter
+
+namespace RashmiProject.Utilities
+{
+    [Binding]
+    public class Hooks
+    {
+        public static IWebDriver driver;
+        private static string screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
+        private static string extentReportsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "ExtentReports");
+
+        private static ExtentReports extent;
+        private static ExtentTest feature;
+        private ExtentTest scenario;
+        private static ExtentSparkReporter sparkReporter;
+
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--window-size=1920x1080");
+
+            driver = new ChromeDriver(options);
+            driver.Manage().Window.Maximize();
+
+            // Setting up ExtentReports
+            if (extent == null)
+            {
+                string reportPath = Path.Combine(extentReportsFolderPath, "ExtentReport.html");
+                Directory.CreateDirectory(Path.GetDirectoryName(reportPath));
+                sparkReporter = new ExtentSparkReporter(reportPath);
+                extent = new ExtentReports();
+                extent.AttachReporter(sparkReporter);
+            }
+
+            feature = extent.CreateTest("Feature Name");  // Use actual feature name
+            scenario = feature.CreateNode("Scenario Name");  // Use actual scenario name
+        }
+
+        [AfterStep]
+        public void AfterStep()
+        {
+            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+
+            // Capture screenshot after each step
+            var screenshotPath = TakeScreenshot();
+            TakeScreenshot1();
+
+            if (ScenarioContext.Current.TestError == null)
+            {
+                // Attach screenshot directly to the report for passed steps
+                if (screenshotPath != null)
+                {
+                    // Directly attach the screenshot from memory
+                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
+                }
+                else
+                {
+                    scenario.Log(Status.Pass, stepText);
+                }
+            }
+            else
+            {
+                // Attach screenshot directly to the report for failed steps
+                if (screenshotPath != null)
+                {
+                    // Directly attach the screenshot from memory
+                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
+                }
+                else
+                {
+                    scenario.Log(Status.Fail, stepText);
+                }
+
+                // Log the actual error message
+                scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+            }
+        }
+
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            if (driver != null)
+            {
+                driver.Quit();
+            }
+
+            // Flush the ExtentReport after all scenarios have finished
+            extent.Flush();
+        }
+
+        private string TakeScreenshot()
+        {
+            try
+            {
+                if (driver == null)
+                {
+                    return null;
+                }
+
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                byte[] screenshotBytes = screenshot.AsByteArray;
+
+                // Return screenshot as base64 string (can be attached to the Extent report directly)
+                return Convert.ToBase64String(screenshotBytes);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while taking screenshot: " + ex.Message);
+                return null;
+            }
+        }
+
+
+        private void TakeScreenshot1()
+        {
+            try
+            {
+                if (!Directory.Exists(screenshotsFolderPath))
+                {
+                    Directory.CreateDirectory(screenshotsFolderPath);
+                    Console.WriteLine("Created Screenshots directory at: " + screenshotsFolderPath);
+                }
+
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string screenshotFilePath = Path.Combine(screenshotsFolderPath, $"screenshot_{timestamp}.png");
+
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                screenshot.SaveAsFile(screenshotFilePath);
+
+                Console.WriteLine($"Screenshot saved to: {screenshotFilePath}");
+
+                if (File.Exists(screenshotFilePath))
+                {
+                    Console.WriteLine($"Screenshot file found: {screenshotFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine("Screenshot file not found.");
+                }
+
+                var directoryContents = Directory.GetFiles(screenshotsFolderPath);
+                Console.WriteLine("Files in the Screenshots directory:");
+                foreach (var file in directoryContents)
+                {
+                    Console.WriteLine(file);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while taking screenshot: " + ex.Message);
+            }
+        }
+
+
+    }
+}
+
