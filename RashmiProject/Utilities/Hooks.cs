@@ -122,9 +122,7 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using TechTalk.SpecFlow;
 using AventStack.ExtentReports;  // Importing the ExtentReports library
-using AventStack.ExtentReports.Reporter;
-using OpenQA.Selenium.Chrome;  // For the ExtentSparkReporter
-
+using AventStack.ExtentReports.Reporter;  // For the ExtentSparkReporter
 
 namespace RashmiProject.Utilities
 {
@@ -172,8 +170,9 @@ namespace RashmiProject.Utilities
                 string screenshotPath = TakeScreenshot();
                 if (screenshotPath != null)
                 {
-                    // Ensure that the screenshot is correctly attached to the Extent report
-                    scenario.Log(Status.Fail, "Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                    // Attach screenshot using the absolute path
+                    string relativeScreenshotPath = Path.Combine("TestResults", "Screenshots", Path.GetFileName(screenshotPath));
+                    scenario.Log(Status.Fail, "Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(relativeScreenshotPath).Build());
                 }
                 GenerateExtentReport();
             }
@@ -201,7 +200,7 @@ namespace RashmiProject.Utilities
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
                 screenshot.SaveAsFile(screenshotFilePath);
 
-                return screenshotFilePath;  // Return the screenshot path
+                return screenshotFilePath;  // Return the absolute screenshot path
             }
             catch (Exception ex)
             {
