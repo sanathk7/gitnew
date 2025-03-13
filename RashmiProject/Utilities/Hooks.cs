@@ -5,7 +5,7 @@ using OpenQA.Selenium;
 using TechTalk.SpecFlow;
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
-using WebDriverManager;
+using System.Threading;
 
 namespace RashmiProject.Utilities
 {
@@ -13,172 +13,98 @@ namespace RashmiProject.Utilities
     public class Hooks
     {
         public static IWebDriver driver;
-        private static ExtentReports _extent;
-        private static ExtentTest _feature;
-        private ExtentTest _scenario;
-        private static ExtentSparkReporter _sparkReporter;
         private static string screenshotsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "Screenshots");
         private static string extentReportsFolderPath = Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE"), "TestResults", "ExtentReports");
 
-        [BeforeTestRun]
-        public static void BeforeTestRun()
-        {
-            string reportPath = Path.Combine(Directory.GetCurrentDirectory(), "Reports", "ExtentReport.html");
-            Directory.CreateDirectory(Path.GetDirectoryName(reportPath));
-
-            _sparkReporter = new ExtentSparkReporter(reportPath);
-            _extent = new ExtentReports();
-            _extent.AttachReporter(_sparkReporter);
-
-            Console.WriteLine("Extent report initialized.");
-        }
-
-        [BeforeFeature]
-        public static void BeforeFeature(FeatureContext featureContext)
-        {
-            _feature = _extent.CreateTest(featureContext.FeatureInfo.Title);
-        }
+        private static ExtentReports _extent;
+        private static ExtentTest _feature;
+        private static ExtentSparkReporter _sparkReporter;
 
         [BeforeScenario]
         public void BeforeScenario()
         {
-            Console.WriteLine("Initializing WebDriver...");
-            
-            if (driver == null)
-            {
-                driver = new ChromeDriver();
-            }
+            // Setup WebDriver
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--headless");
+            options.AddArgument("--window-size=1920x1080");
 
-            _scenario = _feature.CreateNode(_scenarioContext.ScenarioInfo.Title);
-        }
+            driver = new ChromeDriver(options);
+            driver.Manage().Window.Maximize();
 
-        [AfterStep]
-        public void AfterStep()
-        {
-            string stepText = _scenarioContext.StepContext.StepInfo.Text;
-            string screenshotPath = CaptureScreenshot(_scenarioContext.ScenarioInfo.Title, stepText);
-
-            if (_scenarioContext.TestError == null)
-            {
-                if (screenshotPath != null)
-                {
-                    _scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
-                }
-                else
-                {
-                    _scenario.Log(Status.Pass, stepText);
-                }
-            }
-            else
-            {
-                if (screenshotPath != null)
-                {
-                    _scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
-                }
-                else
-                {
-                    _scenario.Log(Status.Fail, stepText);
-                }
-
-                _scenario.Log(Status.Fail, _scenarioContext.TestError.Message);
-            }
+            // Initialize ExtentReports
+            string reportPath = Path.Combine(extentReportsFolderPath, $"ExtentReport_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.html");
+            Directory.CreateDirectory(extentReportsFolderPath);
+            _sparkReporter = new ExtentSparkReporter(reportPath);
+            _extent = new ExtentReports();
+            _extent.AttachReporter(_sparkReporter);
+            _feature = _extent.CreateTest("Feature Name"); // You can change the feature name as needed.
         }
 
         [AfterScenario]
         public void AfterScenario()
         {
+            if (ScenarioContext.Current.TestError != null)
+            {
+                // If the test fails, capture a screenshot and log it in the Extent report.
+                string screenshotPath = TakeScreenshot();
+                _feature.Log(AventStack.ExtentReports.Status.Fail, "Scenario failed", 
+                    MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                _feature.Log(AventStack.ExtentReports.Status.Fail, ScenarioContext.Current.TestError.Message);
+            }
+            else
+            {
+                // If the test passes, log success in Extent report.
+                string screenshotPath = TakeScreenshot();
+                _feature.Log(AventStack.ExtentReports.Status.Pass, "Scenario passed", 
+                    MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+            }
+
+            // Finalize Extent Report for this scenario.
+            _extent.Flush();
+
+            // Close the WebDriver if it exists.
             if (driver != null)
             {
                 driver.Quit();
-                driver = null;
             }
-
-            Console.WriteLine("Test finished, WebDriver closed.");
         }
 
-        [AfterTestRun]
-        public static void AfterTestRun()
-        {
-            _extent.Flush();
-            Console.WriteLine("Extent report finalized.");
-        }
-
-        // Capture Screenshot
-        private string CaptureScreenshot(string scenarioName, string stepName)
+        private string TakeScreenshot()
         {
             try
             {
-                if (driver == null || driver.WindowHandles.Count == 0)
+                if (driver == null)
                 {
-                    Console.WriteLine("WebDriver is null or no active window.");
+                    Console.WriteLine("WebDriver is null. Cannot capture screenshot.");
                     return null;
                 }
 
+                if (driver.WindowHandles.Count == 0)
+                {
+                    Console.WriteLine("No active browser window. Skipping screenshot.");
+                    return null;
+                }
+
+                // Introduce a small wait before capturing screenshot
+                Thread.Sleep(500);
+
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                string screenshotPath = Path.Combine(Directory.GetCurrentDirectory(), "Screenshots");
-                Directory.CreateDirectory(screenshotPath);
+                string screenshotFilePath = Path.Combine(screenshotsFolderPath, $"screenshot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png");
 
-                string sanitizedStepName = string.Join("_", stepName.Split(Path.GetInvalidFileNameChars()));
-                string filePath = Path.Combine(screenshotPath, $"{scenarioName}_{sanitizedStepName}.png");
+                // Ensure Screenshots Folder Exists
+                Directory.CreateDirectory(screenshotsFolderPath);
 
-                screenshot.SaveAsFile(filePath);
-                Console.WriteLine($"Screenshot saved at: {filePath}");
+                // Save Screenshot
+                screenshot.SaveAsFile(screenshotFilePath);
 
-                return filePath;
+                Console.WriteLine($"Screenshot saved at: {screenshotFilePath}");
+
+                return screenshotFilePath;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
                 return null;
-            }
-        }
-
-        private void GenerateExtentReport()
-        {
-            try
-            {
-                if (!Directory.Exists(extentReportsFolderPath))
-                {
-                    Directory.CreateDirectory(extentReportsFolderPath);
-                    Console.WriteLine("Created ExtentReports directory at: " + extentReportsFolderPath);
-                }
-
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string reportFilePath = Path.Combine(extentReportsFolderPath, $"extent_report_{timestamp}.html");
-
-                // Create and configure the ExtentReports instance
-                var extent = new ExtentReports();
-                var htmlReporter = new ExtentHtmlReporter(reportFilePath);
-                extent.AttachReporter(htmlReporter);
-
-                // Add test details to the report (example)
-                var test = extent.CreateTest("Test Name", "Test Description");
-                test.Log(Status.Info, "Test started");
-
-                // Finish the report after the test is completed
-                extent.Flush();
-
-                Console.WriteLine($"Extent report saved to: {reportFilePath}");
-
-                if (File.Exists(reportFilePath))
-                {
-                    Console.WriteLine($"Extent report file found: {reportFilePath}");
-                }
-                else
-                {
-                    Console.WriteLine("Extent report file not found.");
-                }
-
-                var directoryContents = Directory.GetFiles(extentReportsFolderPath);
-                Console.WriteLine("Files in the ExtentReports directory:");
-                foreach (var file in directoryContents)
-                {
-                    Console.WriteLine(file);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error while generating extent report: " + ex.Message);
             }
         }
     }
