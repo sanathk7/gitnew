@@ -32,7 +32,7 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Step to ensure the Screenshots and ExtentReports directories exist and move files to the right path
+    # Ensure the Screenshots and ExtentReports directories exist and move files
     - name: Ensure Screenshots and ExtentReports directories exist and move files
       run: |
         # Debugging output
@@ -69,6 +69,12 @@ jobs:
           echo "No extent reports found. Skipping copy operation."
         fi  # End of extent reports directory condition
 
+    # Debugging: List extent report files before sending email
+    - name: List ExtentReports directory contents
+      run: |
+        echo "Listing extent report files in: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
+        ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
+
     # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
@@ -89,11 +95,4 @@ jobs:
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
-      
-    # Debugging: Check if the email action ran successfully
-    - name: Debug email step
-      if: failure()  # Only run if failure occurred
-      run: |
-        echo "Email sending step triggered. Checking email action logs."
-        echo "SMTP Server: smtp.gmail.com"
-        echo "Recipient: ${{ secrets.DEVELOPER_EMAIL }}"
+
