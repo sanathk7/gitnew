@@ -89,3 +89,11 @@ jobs:
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
+      
+    # Debugging: Check if the email action ran successfully
+    - name: Debug email step
+      if: failure()  # Only run if failure occurred
+      run: |
+        echo "Email sending step triggered. Checking email action logs."
+        echo "SMTP Server: smtp.gmail.com"
+        echo "Recipient: ${{ secrets.DEVELOPER_EMAIL }}"
