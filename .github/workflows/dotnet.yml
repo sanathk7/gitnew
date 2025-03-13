@@ -32,39 +32,23 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Ensure the Screenshots and ExtentReports directories exist and move files
-    - name: Ensure Screenshots and ExtentReports directories exist and move files
+    # Debugging: List contents of directories for Screenshots and ExtentReports
+    - name: List Files in TestResults/Screenshots
+      run: ls -la "${GITHUB_WORKSPACE}/TestResults/Screenshots"
+
+    - name: List Files in TestResults/ExtentReports
+      run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
+
+    # Check if extent report file exists before proceeding with email
+    - name: Wait for Extent Report File
       run: |
-        echo "GITHUB_WORKSPACE is: ${GITHUB_WORKSPACE}"
-        echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/Screenshots"
-        ls -la "${GITHUB_WORKSPACE}/TestResults/"
-
-        if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
-          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
-          for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
-            cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
-          done
+        report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_2025-03-13_05-25-53.html"
+        if [ -f "$report_file" ]; then
+          echo "Extent report file exists: $report_file"
         else
-          echo "No screenshots found. Skipping copy operation."
+          echo "Extent report file not found."
+          exit 1
         fi
-
-        echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
-        ls -la "${GITHUB_WORKSPACE}/TestResults/"
-
-        if [ -d "${GITHUB_WORKSPACE}/TestResults/ExtentReports" ]; then
-          mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
-          for report in ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*; do
-            cp "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
-          done
-        else
-          echo "No extent reports found. Skipping copy operation."
-        fi
-
-    # Debugging: List ExtentReports directory contents
-    - name: List ExtentReports directory contents
-      run: |
-        echo "Listing extent report files in: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
-        ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
 
     # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
@@ -86,3 +70,4 @@ jobs:
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
+
