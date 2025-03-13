@@ -296,15 +296,15 @@ namespace RashmiProject.Utilities
             string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
 
             // Capture screenshot after each step
-            string screenshotPath = TakeScreenshot();
+            var screenshotPath = TakeScreenshot();
 
             if (ScenarioContext.Current.TestError == null)
             {
                 // Attach screenshot directly to the report for passed steps
                 if (screenshotPath != null)
                 {
-                    // Attach the screenshot directly
-                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                    // Directly attach the screenshot from memory
+                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
                 }
                 else
                 {
@@ -316,8 +316,8 @@ namespace RashmiProject.Utilities
                 // Attach screenshot directly to the report for failed steps
                 if (screenshotPath != null)
                 {
-                    // Attach the screenshot directly
-                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
+                    // Directly attach the screenshot from memory
+                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
                 }
                 else
                 {
@@ -345,19 +345,16 @@ namespace RashmiProject.Utilities
         {
             try
             {
-                if (!Directory.Exists(screenshotsFolderPath))
+                if (driver == null)
                 {
-                    Directory.CreateDirectory(screenshotsFolderPath);
+                    return null;
                 }
 
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string screenshotFilePath = Path.Combine(screenshotsFolderPath, $"screenshot_{timestamp}.png");
-
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotFilePath);
+                byte[] screenshotBytes = screenshot.AsByteArray;
 
-                // Return the absolute path to the screenshot file directly
-                return screenshotFilePath;
+                // Return screenshot as base64 string (can be attached to the Extent report directly)
+                return Convert.ToBase64String(screenshotBytes);
             }
             catch (Exception ex)
             {
