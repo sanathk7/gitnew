@@ -1,3 +1,4 @@
+
 name: .NET
 
 on:
@@ -33,23 +34,24 @@ jobs:
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
     # Debugging: List contents of directories for Screenshots and ExtentReports
-   
+    - name: List Files in TestResults/Screenshots
+      run: ls -la "${GITHUB_WORKSPACE}/TestResults/Screenshots"
 
     - name: List Files in TestResults/ExtentReports
       run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
 
     # Check if extent report file exists before proceeding with email
-    # - name: Wait for Extent Report File
-    #   run: |
-    #     report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_*.html"
-    #     if ls $report_file 1> /dev/null 2>&1; then
-    #       echo "Extent report file exists"
-    #     else
-    #       echo "Extent report file not found."
-    #       exit 1
-    #     fi
+    - name: Wait for Extent Report File
+      run: |
+        report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_2025-03-13_05-25-53.html"
+        if [ -f "$report_file" ]; then
+          echo "Extent report file exists: $report_file"
+        else
+          echo "Extent report file not found."
+          exit 1
+        fi
 
-    # Send email notification with extent report attached (via Gmail SMTP)
+    # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
@@ -58,13 +60,14 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Extent Report Attached"
+        subject: "Test Failed - Screenshot and Extent Report Attached"
         body: |
           Hello Developer,
-          One or more tests have failed. Please find the extent report attached for your reference.
+          One or more tests have failed. Please find the screenshot and extent report attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
+          ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
