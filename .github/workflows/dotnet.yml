@@ -68,6 +68,7 @@ jobs:
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
-          ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
+      # ${{ github.workspace }}/TestResults/Screenshots/*
+          
 
