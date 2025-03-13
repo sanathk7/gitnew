@@ -38,8 +38,8 @@ jobs:
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
     # Debugging: List contents of directories for Screenshots and ExtentReports
-    - name: List Files in TestResults/Screenshots
-      run: ls -la "${GITHUB_WORKSPACE}/TestResults/Screenshots"
+   # - name: List Files in TestResults/Screenshots
+    #  run: ls -la "${GITHUB_WORKSPACE}/TestResults/Screenshots"
 
     - name: List Files in TestResults/ExtentReports
       run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
@@ -74,4 +74,4 @@ jobs:
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
-          ${{ github.workspace }}/TestResults/ExtentReports/*
+      # ${{ github.workspace }}/TestResults/ExtentReports/*
