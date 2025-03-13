@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
-    branches: ["master"]
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -32,40 +32,34 @@ jobs:
       run: |
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
-    # Step to ensure the Screenshots and Reports directories exist
-    - name: Prepare Screenshots and Reports Directory
+    # Step to ensure the Screenshots and ExtentReports directories exist and move files to the right path
+    - name: Prepare Directories
       if: failure()  # Only run this if tests fail
       run: |
-        echo "Current directory structure:"
-        # Ensure the TestResults and its subdirectories exist
-        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Screenshots
-        mkdir -p ${{ github.workspace }}/RashmiProject/TestResults/Reports
-
-        # Log current directory structure for debugging
-        ls -R ${{ github.workspace }}/RashmiProject/TestResults
-        
-        # Check if Screenshots directory has files before copying
-        if [ -d "${{ github.workspace }}/RashmiProject/TestResults/Screenshots" ] && [ "$(ls -A ${{ github.workspace }}/RashmiProject/TestResults/Screenshots)" ]; then
-          echo "Screenshots found. Copying to the workspace."
-          cp -r ${{ github.workspace }}/RashmiProject/TestResults/Screenshots/* ${{ github.workspace }}/TestResults/Screenshots/
+        # Ensure the screenshots directory exists
+        if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
+          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+          for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
+            if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
+              cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
+            fi
+          done
         else
-          echo "No screenshots found. Skipping screenshot copy operation."
+          echo "No screenshots found. Skipping copy operation."
+
+        # Ensure the extent reports directory exists
+        if [ -d "${{ github.workspace }}/TestResults/ExtentReports" ]; then
+          mkdir -p ${{ github.workspace }}/TestResults/ExtentReports
+          for report in ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*; do
+            if ! cmp -s "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/$(basename $report)"; then
+              cp "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
+            fi
+          done
+        else
+          echo "No extent reports found. Skipping copy operation."
         fi
 
-        # Always attempt to copy the Extent report, even if it's not found.
-        echo "Attempting to copy Extent report..."
-        # Ensure the target Reports directory exists
-        mkdir -p ${{ github.workspace }}/TestResults/Reports
-        if [ -f "${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html" ]; then
-          echo "Extent report found. Copying to the workspace."
-          cp ${{ github.workspace }}/RashmiProject/Reports/ExtentReport.html ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
-        else
-          echo "No Extent report found. Creating an empty placeholder file."
-          # Create an empty file if the report doesn't exist
-          touch ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
-        fi
-
-    # Send email notification with screenshot and report attached (via Gmail SMTP)
+    # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
@@ -74,14 +68,14 @@ jobs:
         server_port: 587
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
-        subject: "Test Failed - Screenshot and Report Attached"
+        subject: "Test Failed - Screenshot and Extent Report Attached"
         body: |
           Hello Developer,
-          One or more tests have failed. Please find the screenshot(s) and the Extent report attached for your reference.
+          One or more tests have failed. Please find the screenshot and extent report attached for your reference.
           Regards,
           Your GitHub Actions
         to: ${{ secrets.DEVELOPER_EMAIL }}
         from: ${{ secrets.GMAIL_USERNAME }}
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
-          ${{ github.workspace }}/TestResults/Reports/ExtentReport.html
+          ${{ github.workspace }}/TestResults/ExtentReports/*
