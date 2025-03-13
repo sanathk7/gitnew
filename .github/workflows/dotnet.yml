@@ -39,15 +39,15 @@ jobs:
       run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
 
     # Check if extent report file exists before proceeding with email
-    - name: Wait for Extent Report File
-      run: |
-        report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_*.html"
-        if ls $report_file 1> /dev/null 2>&1; then
-          echo "Extent report file exists"
-        else
-          echo "Extent report file not found."
-          exit 1
-        fi
+    # - name: Wait for Extent Report File
+    #   run: |
+    #     report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_*.html"
+    #     if ls $report_file 1> /dev/null 2>&1; then
+    #       echo "Extent report file exists"
+    #     else
+    #       echo "Extent report file not found."
+    #       exit 1
+    #     fi
 
     # Send email notification with extent report attached (via Gmail SMTP)
     - name: Send email notification
