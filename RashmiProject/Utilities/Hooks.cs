@@ -470,7 +470,7 @@ public void AfterStep()
     if (!string.IsNullOrEmpty(screenshotPath))
     {
         // Prepare the image tag to embed the base64 image inline
-        string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
+        string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='400px' />";
         
         if (ScenarioContext.Current.TestError == null)
         {
