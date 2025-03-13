@@ -163,26 +163,54 @@ namespace RashmiProject.Utilities
             scenario = feature.CreateNode("Scenario Name");  // Use actual scenario name
         }
 
+        [AfterStep]
+        public void AfterStep()
+        {
+            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+
+            // Capture screenshot after each step
+            string screenshotPath = TakeScreenshot();
+
+            if (ScenarioContext.Current.TestError == null)
+            {
+                // Attach screenshot for passed steps
+                if (screenshotPath != null)
+                {
+                    string relativeScreenshotPath = Path.Combine("TestResults", "Screenshots", Path.GetFileName(screenshotPath));
+                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(relativeScreenshotPath).Build());
+                }
+                else
+                {
+                    scenario.Log(Status.Pass, stepText);
+                }
+            }
+            else
+            {
+                // Attach screenshot for failed steps
+                if (screenshotPath != null)
+                {
+                    string relativeScreenshotPath = Path.Combine("TestResults", "Screenshots", Path.GetFileName(screenshotPath));
+                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(relativeScreenshotPath).Build());
+                }
+                else
+                {
+                    scenario.Log(Status.Fail, stepText);
+                }
+
+                // Log the actual error message
+                scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
+            }
+        }
+
         [AfterScenario]
         public void AfterScenario()
         {
-            if (ScenarioContext.Current.TestError != null)
-            {
-                string screenshotPath = TakeScreenshot();
-                if (screenshotPath != null)
-                {
-                    // Attach screenshot using the absolute path
-                    string relativeScreenshotPath = Path.Combine("TestResults", "Screenshots", Path.GetFileName(screenshotPath));
-                    scenario.Log(Status.Fail, "Test Failed", MediaEntityBuilder.CreateScreenCaptureFromPath(relativeScreenshotPath).Build());
-                }
-                GenerateExtentReport();
-            }
-
             if (driver != null)
             {
                 driver.Quit();
             }
 
+            // Flush the ExtentReport after all scenarios have finished
             extent.Flush();
         }
 
@@ -207,36 +235,6 @@ namespace RashmiProject.Utilities
             {
                 Console.WriteLine("Error while taking screenshot: " + ex.Message);
                 return null;
-            }
-        }
-
-        private void GenerateExtentReport()
-        {
-            try
-            {
-                if (!Directory.Exists(extentReportsFolderPath))
-                {
-                    Directory.CreateDirectory(extentReportsFolderPath);
-                }
-
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string reportFilePath = Path.Combine(extentReportsFolderPath, $"extent_report_{timestamp}.html");
-
-                // Log the test result in the report (example)
-                if (ScenarioContext.Current.TestError != null)
-                {
-                    scenario.Log(Status.Fail, "Test failed due to error: " + ScenarioContext.Current.TestError.Message);
-                }
-                else
-                {
-                    scenario.Log(Status.Pass, "Test passed successfully");
-                }
-
-                extent.Flush();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error while generating extent report: " + ex.Message);
             }
         }
     }
