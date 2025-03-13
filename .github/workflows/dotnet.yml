@@ -33,12 +33,17 @@ jobs:
         dotnet test RashmiProject.sln --filter "FullyQualifiedName~Features.Happyflow" --no-build --verbosity normal
 
     # Step to ensure the Screenshots and ExtentReports directories exist and move files to the right path
-    - name: Prepare Directories
-      if: failure()  # Only run this if tests fail
+    - name: Ensure Screenshots and ExtentReports directories exist and move files
       run: |
+        # Debugging output
+        echo "GITHUB_WORKSPACE is: ${GITHUB_WORKSPACE}"
+        echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/Screenshots"
+        ls -la "${GITHUB_WORKSPACE}/TestResults/"
+
         # Ensure the screenshots directory exists
-        if [ -d "${{ github.workspace }}/TestResults/Screenshots" ]; then
-          mkdir -p ${{ github.workspace }}/TestResults/Screenshots
+        if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
+          echo "Screenshots directory exists. Proceeding with operation."
+          mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
           for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
             if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
               cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
@@ -46,10 +51,15 @@ jobs:
           done
         else
           echo "No screenshots found. Skipping copy operation."
+        fi  # End of screenshots directory condition
 
         # Ensure the extent reports directory exists
-        if [ -d "${{ github.workspace }}/TestResults/ExtentReports" ]; then
-          mkdir -p ${{ github.workspace }}/TestResults/ExtentReports
+        echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
+        ls -la "${GITHUB_WORKSPACE}/TestResults/"
+
+        if [ -d "${GITHUB_WORKSPACE}/TestResults/ExtentReports" ]; then
+          echo "ExtentReports directory exists. Proceeding with operation."
+          mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
           for report in ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*; do
             if ! cmp -s "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/$(basename $report)"; then
               cp "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
@@ -57,7 +67,7 @@ jobs:
           done
         else
           echo "No extent reports found. Skipping copy operation."
-        fi
+        fi  # End of extent reports directory condition
 
     # Send email notification with screenshot and extent report attached (via Gmail SMTP)
     - name: Send email notification
