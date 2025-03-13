@@ -4,6 +4,9 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
+using AventStack.ExtentReports;
+
+using AventStack.ExtentReports.Reporter;  // Import the ExtentReports library
 
 namespace RashmiProject.Utilities
 {
@@ -93,8 +96,17 @@ namespace RashmiProject.Utilities
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string reportFilePath = Path.Combine(extentReportsFolderPath, $"extent_report_{timestamp}.html");
 
-                // Assuming you have a method to generate the extent report
-                // GenerateExtentReportMethod(reportFilePath);
+                // Create and configure the ExtentReports instance
+                var extent = new ExtentReports();
+                var htmlReporter = new ExtentSparkReporter(reportFilePath);
+                extent.AttachReporter(htmlReporter);
+
+                // Add test details to the report (example)
+                var test = extent.CreateTest("Test Name", "Test Description");
+                test.Log(Status.Info, "Test started");
+
+                // Finish the report after the test is completed
+                extent.Flush();
 
                 Console.WriteLine($"Extent report saved to: {reportFilePath}");
 
