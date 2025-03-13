@@ -418,47 +418,40 @@ namespace RashmiProject.Utilities
 
         [AfterStep]
         public void AfterStep()
-        {
-            string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
+{
+    string stepText = ScenarioContext.Current.StepContext.StepInfo.Text;
 
-            // Capture screenshot after each step
-            var screenshotPath = TakeScreenshot();
-            TakeScreenshot1();
-            string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
-string screenshotFilePath = ConvertBase64ToImage(screenshotPath);
+    // Capture screenshot as base64 string after each step
+    var base64Screenshot = TakeScreenshot();
+
+    if (!string.IsNullOrEmpty(base64Screenshot))
+    {
+        // Convert base64 to normal image file (save as PNG)
+        string screenshotFilePath = ConvertBase64ToImage(base64Screenshot);
+
+        if (screenshotFilePath != null)
+        {
             if (ScenarioContext.Current.TestError == null)
             {
-                
                 // Attach screenshot directly to the report for passed steps
-                if (screenshotPath != null)
-                {
-
-                    // Directly attach the screenshot from memory
-                    scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
-                }
-                else
-                {
-                    scenario.Log(Status.Pass, stepText);
-                }
+                scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotFilePath).Build());
             }
             else
             {
-                TakeScreenshot1();
                 // Attach screenshot directly to the report for failed steps
-                if (screenshotPath != null)
-                {
-                    // Directly attach the screenshot from memory
-                    scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
-                }
-                else
-                {
-                    scenario.Log(Status.Fail, stepText);
-                }
+                scenario.Log(Status.Fail, stepText, MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotFilePath).Build());
 
                 // Log the actual error message
                 scenario.Log(Status.Fail, ScenarioContext.Current.TestError.Message);
             }
         }
+    }
+    else
+    {
+        // Handle case when screenshot wasn't captured
+        scenario.Log(Status.Info, stepText);
+    }
+}
 
         [AfterScenario]
         public void AfterScenario()
@@ -535,29 +528,30 @@ string screenshotFilePath = ConvertBase64ToImage(screenshotPath);
             }
         }
         private string ConvertBase64ToImage(string base64String)
-        {
-            try
-            {
-                // Generate the file name based on current timestamp
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string screenshotFileName = $"Screenshot_{timestamp}.png";
-                string screenshotFilePath = Path.Combine(screenshotsFolderPath, screenshotFileName);
+{
+    try
+    {
+        // Generate the file name based on current timestamp
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string screenshotFileName = $"Screenshot_{timestamp}.png";
+        string screenshotFilePath = Path.Combine(screenshotsFolderPath, screenshotFileName);
 
-                // Convert base64 string to byte array
-                byte[] imageBytes = Convert.FromBase64String(base64String);
+        // Convert base64 string to byte array
+        byte[] imageBytes = Convert.FromBase64String(base64String);
 
-                // Write the byte array to the file system as an image
-                File.WriteAllBytes(screenshotFilePath, imageBytes);
+        // Write the byte array to the file system as an image
+        File.WriteAllBytes(screenshotFilePath, imageBytes);
 
-                // Return the file path
-                return screenshotFilePath;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error while saving base64 to image: " + ex.Message);
-                return null;
-            }
-        }
+        // Return the file path
+        return screenshotFilePath;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Error while saving base64 to image: " + ex.Message);
+        return null;
+    }
+}
+
 
 
     }
