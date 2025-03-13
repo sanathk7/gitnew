@@ -35,41 +35,32 @@ jobs:
     # Ensure the Screenshots and ExtentReports directories exist and move files
     - name: Ensure Screenshots and ExtentReports directories exist and move files
       run: |
-        # Debugging output
         echo "GITHUB_WORKSPACE is: ${GITHUB_WORKSPACE}"
         echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/Screenshots"
         ls -la "${GITHUB_WORKSPACE}/TestResults/"
 
-        # Ensure the screenshots directory exists
         if [ -d "${GITHUB_WORKSPACE}/TestResults/Screenshots" ]; then
-          echo "Screenshots directory exists. Proceeding with operation."
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/Screenshots"
           for screenshot in ${GITHUB_WORKSPACE}/TestResults/Screenshots/*; do
-            if ! cmp -s "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/$(basename $screenshot)"; then
-              cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
-            fi
+            cp "$screenshot" "${GITHUB_WORKSPACE}/TestResults/Screenshots/"
           done
         else
           echo "No screenshots found. Skipping copy operation."
-        fi  # End of screenshots directory condition
+        fi
 
-        # Ensure the extent reports directory exists
         echo "Checking if directory exists: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
         ls -la "${GITHUB_WORKSPACE}/TestResults/"
 
         if [ -d "${GITHUB_WORKSPACE}/TestResults/ExtentReports" ]; then
-          echo "ExtentReports directory exists. Proceeding with operation."
           mkdir -p "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
           for report in ${GITHUB_WORKSPACE}/TestResults/ExtentReports/*; do
-            if ! cmp -s "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/$(basename $report)"; then
-              cp "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
-            fi
+            cp "$report" "${GITHUB_WORKSPACE}/TestResults/ExtentReports/"
           done
         else
           echo "No extent reports found. Skipping copy operation."
-        fi  # End of extent reports directory condition
+        fi
 
-    # Debugging: List extent report files before sending email
+    # Debugging: List ExtentReports directory contents
     - name: List ExtentReports directory contents
       run: |
         echo "Listing extent report files in: ${GITHUB_WORKSPACE}/TestResults/ExtentReports"
@@ -95,4 +86,3 @@ jobs:
         attachments: |
           ${{ github.workspace }}/TestResults/Screenshots/*
           ${{ github.workspace }}/TestResults/ExtentReports/*
-
