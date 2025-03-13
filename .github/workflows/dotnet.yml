@@ -37,6 +37,16 @@ jobs:
     - name: List Files in TestResults/ExtentReports
       run: ls -la "${GITHUB_WORKSPACE}/TestResults/ExtentReports"
 
+    - name: Wait for Extent Report File
+      run: |
+        report_file="${GITHUB_WORKSPACE}/TestResults/ExtentReports/extent_report_2025-03-13_05-25-53.html"
+        if [ -f "$report_file" ]; then
+          echo "Extent report file exists: $report_file"
+        else
+          echo "Extent report file not found."
+          exit 1
+        fi
+
     - name: Send email notification
       if: failure()  # Only send email if the test fails
       uses: dawidd6/action-send-mail@v3
