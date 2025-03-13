@@ -440,6 +440,7 @@ namespace RashmiProject.Utilities
             }
             else
             {
+                TakeScreenshot1();
                 // Attach screenshot directly to the report for failed steps
                 if (screenshotPath != null)
                 {
@@ -534,4 +535,3 @@ namespace RashmiProject.Utilities
 
     }
 }
-
