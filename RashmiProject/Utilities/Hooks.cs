@@ -122,7 +122,8 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using TechTalk.SpecFlow;
 using AventStack.ExtentReports;  // Importing the ExtentReports library
-using AventStack.ExtentReports.Reporter;  // For the ExtentSparkReporter
+using AventStack.ExtentReports.Reporter;
+using OpenQA.Selenium.Chrome;  // For the ExtentSparkReporter
 
 namespace RashmiProject.Utilities
 {
