@@ -424,12 +424,15 @@ namespace RashmiProject.Utilities
             // Capture screenshot after each step
             var screenshotPath = TakeScreenshot();
             TakeScreenshot1();
-
+            string imgTag = $"<img src='data:image/png;base64,{screenshotPath}' width='600px' />";
+string screenshotFilePath = ConvertBase64ToImage(screenshotPath);
             if (ScenarioContext.Current.TestError == null)
             {
+                
                 // Attach screenshot directly to the report for passed steps
                 if (screenshotPath != null)
                 {
+
                     // Directly attach the screenshot from memory
                     scenario.Log(Status.Pass, stepText, MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotPath).Build());
                 }
@@ -529,6 +532,30 @@ namespace RashmiProject.Utilities
             catch (Exception ex)
             {
                 Console.WriteLine("Error while taking screenshot: " + ex.Message);
+            }
+        }
+        private string ConvertBase64ToImage(string base64String)
+        {
+            try
+            {
+                // Generate the file name based on current timestamp
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string screenshotFileName = $"Screenshot_{timestamp}.png";
+                string screenshotFilePath = Path.Combine(screenshotsFolderPath, screenshotFileName);
+
+                // Convert base64 string to byte array
+                byte[] imageBytes = Convert.FromBase64String(base64String);
+
+                // Write the byte array to the file system as an image
+                File.WriteAllBytes(screenshotFilePath, imageBytes);
+
+                // Return the file path
+                return screenshotFilePath;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while saving base64 to image: " + ex.Message);
+                return null;
             }
         }
 
