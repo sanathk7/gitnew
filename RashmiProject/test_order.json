@@ -1,0 +1,9 @@
+{
+    "features": [
+        "Features/LoginPages.feature",
+        "Features/Shopping.feature",
+        "Features/Addingcart.feature",
+        "Features/Checkout.feature",
+        "Features/CheckoutOverview.feature"
+    ]
+}
